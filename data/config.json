@@ -1,0 +1,23 @@
+{
+  "timeoutDurationMs": 60000,
+  "maxStrikes": 3,
+  "notificationChannelId": "",
+  "logChannelId": "",
+  "dmWarningTitle": "🚨 REGIX SECURITY WARNING",
+  "dmWarningDesc": "You have violated the server's moderation policies.\n\n**Strike:** {strikes}/{maxStrikes}\n**Reason:** {reason}\n\n{banWarning}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n**REGIX Studio** — *GOD MODE Active*",
+  "dmWarningThumbnail": "https://cdn.discordapp.com/attachments/1340214088525152279/1496919205059100793/freepik_a-professional-tech-logo-_2748365049.png",
+  "dmWarningImage": "https://cdn.discordapp.com/attachments/1340214088525152279/1496925830272520202/standard.gif",
+  "logTitle": "🚨 Moderation Action Taken",
+  "logThumbnail": "",
+  "logImage": "",
+  "termsTitle": "📜 REGIX STUDIO — Bot Terms & Conditions",
+  "termsDesc": "**Welcome to REGIX GOD MODE!**\n\nThis bot is a private moderation system. Only authorized staff members (Owner, Admin, Mod roles) are permitted to use bot commands.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n**🔹 Terms of Use:**\n• You must be a designated server staff member.\n• Commands affect server-wide moderation settings.\n• Abuse of commands will result in a report to server admins.\n\n**🔹 Privacy Notice:**\n• Message content is scanned for moderation purposes only.\n• Violation data is stored locally as strike counts.\n\n**🔹 Contact:**\n• If you believe you should have access, contact a server Admin.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n**REGIX Studio** — *GOD MODE Active*",
+  "termsThumbnail": "",
+  "termsImage": "",
+  "strikeTitle": "📊 REGIX Strike Check",
+  "strikeThumbnail": "",
+  "strikeImage": "",
+  "resetTitle": "✅ Strikes Reset",
+  "resetThumbnail": "",
+  "resetImage": ""
+}
