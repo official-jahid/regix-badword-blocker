@@ -1,0 +1,122 @@
+[
+  {
+    "id": "f9aca722",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:52:32.896Z"
+  },
+  {
+    "id": "46df4285",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:51:38.959Z"
+  },
+  {
+    "id": "b4ebaa63",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:50:26.908Z"
+  },
+  {
+    "id": "21775402",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:50:24.941Z"
+  },
+  {
+    "id": "019044c1",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:49:21.070Z"
+  },
+  {
+    "id": "9a842d9c",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:48:39.264Z"
+  },
+  {
+    "id": "fbac40c7",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:48:32.737Z"
+  },
+  {
+    "id": "b1f776f8",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:48:30.786Z"
+  },
+  {
+    "id": "b34b5316",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:47:33.353Z"
+  },
+  {
+    "id": "6659930f",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:47:31.418Z"
+  },
+  {
+    "id": "204089f7",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:44:12.917Z"
+  },
+  {
+    "id": "878d6263",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-17T18:44:07.241Z"
+  },
+  {
+    "id": "d066ed66",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:43:12.689Z"
+  },
+  {
+    "id": "1fc82a68",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:34:59.304Z"
+  },
+  {
+    "id": "9f55a905",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard server started",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T18:32:02.532Z"
+  }
+]

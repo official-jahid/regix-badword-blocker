@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🔥 REGIX GOD MODE — Dashboard Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas id="particleCanvas"></canvas>
+    <script>
+      if (sessionStorage.getItem("regix_auth") === "true" || sessionStorage.getItem("regix_access")) {
+        window.location.replace("pages/overview.html");
+      }
+    </script>
+    <div class="login-wrapper">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="logo-icon">
+            <svg viewBox="0 0 40 40" fill="none">
+              <rect x="2" y="2" width="36" height="36" rx="8" stroke="#ff1a1a" stroke-width="3" fill="none" />
+              <path d="M12 20 L18 26 L28 14" stroke="#ff1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h1>🔥 REGIX</h1>
+          <p class="subtitle">⚡ GOD MODE · Control Panel 🎛️</p>
+        </div>
+        <form class="login-form" id="loginForm">
+          <div class="input-group">
+            <label>👤 Username 🔤</label>
+            <input type="text" id="loginUser" placeholder="Enter username" autocomplete="username" required />
+          </div>
+          <div class="input-group">
+            <label>🔑 Password 🔒</label>
+            <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password" required />
+          </div>
+          <div class="error-msg" id="loginError">❌ Invalid credentials 🚨</div>
+          <button type="submit" class="btn-glow">🔓 Authenticate 🚀</button>
+        </form>
+      </div>
+    </div>
+    <script src="particles.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

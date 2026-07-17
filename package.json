@@ -1,13 +1,16 @@
 {
   "name": "regix-badword-blocker",
   "version": "2.0.0",
-  "description": "REGIX GOD MODE - Advanced Discord Moderation Bot (Bun + TypeScript + Discord.js v14)",
+  "description": "REGIX 🔥 GOD MODE - Advanced Discord Moderation Bot (Bun + TypeScript + Discord.js v14) 💻",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "build": "bun build src/index.ts --outdir dist"
+    "build": "bun build src/index.ts --outdir dist",
+    "dashboard": "bun run dashboard/server.js",
+    "dashboard:dev": "bun --watch dashboard/server.js",
+    "dev:all": "concurrently \"bun run src/index.ts\" \"bun run dashboard/server.js\""
   },
   "dependencies": {
     "@openrouter/agent": "^0.7.2",
@@ -18,6 +21,8 @@
   },
   "devDependencies": {
     "@types/bun": "^1.1.10",
+    "@types/node": "^22.0.0",
+    "concurrently": "^8.2.2",
     "typescript": "^5.5.4"
   }
 }

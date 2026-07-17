@@ -164,6 +164,59 @@ regix-badword-blocker/
 
 ---
 
+## Dashboard 🌐
+
+REGIX includes a full-stack web dashboard for remote management!
+
+### Features ✨
+
+- **🔐 User Authentication** — Secure login with JWT tokens & bcrypt password hashing
+- **🛡️ Security First** — All pages require authentication, redirect to login if not authenticated
+- **👥 User Management** — Create/delete dashboard users (owner-only)
+- **📊 Real-time Stats** — Live view of bad words, violations, flagged users
+- **📝 Word Lists** — Manage blacklist and whitelist via web UI
+- **⚙️ Bot Commands** — Web-controlled bot commands (help, strikes, reset, manage)
+- **📋 Activity Logs** — View and export all moderation activity
+- **⚙️ Settings Editor** — Configure timeout, max strikes, channels
+- **📱 Responsive Design** — Dedicated mobile-optimized pages with sidebar navigation
+
+### Running the Dashboard 🚀
+
+```bash
+# Start bot and dashboard together
+bun run dev:all
+
+# Or run them separately
+bun run dev           # Bot with file watching
+bun run dashboard     # Dashboard server
+```
+
+The dashboard runs on `http://localhost:3000` by default.
+
+### Default Credentials 🔑
+
+- **Username:** `admin`
+- **Password:** `Regix@2024`
+
+Configure these in the User Management page after logging in.
+
+### API Endpoints 🔌
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/api/login` | POST | Authenticate user | ❌ |
+| `/api/logout` | POST | Logout user | ✅ |
+| `/api/me` | GET | Get current user info | ✅ |
+| `/api/users` | GET/POST/DELETE | User management | 👑 Owner |
+| `/api/bot/data` | GET | Get bot data (words, violations, etc.) | ✅ |
+| `/api/bot/words` | POST/DELETE | Manage words | ✅ |
+| `/api/bot/violations` | DELETE | Reset violations | ✅ |
+| `/api/bot/commands` | POST | Run bot commands | ✅ |
+| `/api/logs` | GET | Get activity logs | ✅ |
+| `/api/logs/export` | GET | Export logs as JSON | ✅ |
+
+---
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
