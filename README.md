@@ -1,0 +1,1 @@
+# regix-badword-blocker
