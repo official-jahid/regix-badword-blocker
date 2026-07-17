@@ -6,13 +6,13 @@
  * Vercel uses api/index.js instead (serverless function).
  */
 
-import { createApp } from "./app.js";
+import { createApp } from "./express-app.js";
 
-const PORT = process.env.DASHBOARD_PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 const app = createApp();
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`
 ╔══════════════════════════════════════════╗
 ║     🔥 REGIX GOD MODE DASHBOARD v3.0    ║
