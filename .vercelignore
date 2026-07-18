@@ -34,7 +34,6 @@ pnpm-lock.yaml
 README.md
 LICENSE
 
-/package.json
 /tsconfig.json
 /bun.lock
 /bun.lockb
