@@ -1238,24 +1238,7 @@ export async function createApp() {
     });
   });
 
-  // ─── Auth middleware ───────────────────────────────────────────────────────
-  function requireAuth(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        jwt.verify(authHeader.slice(7), JWT_SECRET);
-        return next();
-      } catch {}
-    }
-    return res.redirect("/login.html");
-  }
-
-  // ─── Protected dashboard pages ─────────────────────────────────────────────
-  app.get("/pages/:page.html", requireAuth, (req, res) => {
-    res.sendFile(join(DASH_DIR, "pages", req.params.page + ".html"));
-  });
-
-  // ─── Serve public static files (login, index, css, js) ───────────────────────────
+  // ─── Serve public static files (login, index, css, js, pages) ─────────────────────
   app.use(express.static(DASH_DIR));
 
   // ─── SPA fallback ────────────────────────────────────────────────────────

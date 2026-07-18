@@ -1,198 +1,228 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>📊 Overview - REGIX GOD MODE 🔥</title>
-    <link rel="stylesheet" href="../style.css" />
-  </head>
-  <body>
-<script>
-        // Security: Check authentication
-        if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
-          window.location.replace("/login.html");
-        }
-      </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
-    <script src="../three-init.js"></script>
-    
-    <div class="scene-container">
-      <canvas id="threeCanvas"></canvas>
-    </div>
-    
-    <div class="dashboard">
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-brand">
-            <div class="logo-icon small">
-              <svg viewBox="0 0 40 40" fill="none">
-                <rect x="2" y="2" width="36" height="36" rx="8" stroke="#ff1a1a" stroke-width="3" fill="none" />
-                <path d="M12 20 L18 26 L28 14" stroke="#ff1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <div class="brand-text">
-              <h2>🔥 REGIX</h2>
-              <span class="brand-sub">⚡ GOD MODE v3.0</span>
-            </div>
-            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 Dashboard — REGIX GOD MODE 🔥</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden;">
+  <script>
+    if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
+      window.location.replace("/login.html");
+    }
+  </script>
+
+  <div class="scene-container" style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
+    <canvas id="threeCanvas" style="width: 100%; height: 100%"></canvas>
+  </div>
+
+  <div class="dashboard" style="display: flex; min-height: 100vh;">
+    <aside id="sidebar" class="glass-sidebar sidebar" style="
+      width: 260px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 1rem;
+      background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(16px); border-right: 1px solid var(--border);
+    ">
+      <div>
+        <div class="sidebar-header" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+          <div class="logo-icon" style="width: 32px; height: 32px;">
+            <svg viewBox="0 0 40 40" fill="none" style="width: 100%; height: 100%">
+              <rect x="2" y="2" width="36" height="36" rx="8" stroke="var(--red)" stroke-width="3" />
+              <path d="M12 20 L18 26 L28 14" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div>
+            <h1 style="font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; color: #fff;">REGIX</h1>
+            <span style="font-size: 0.7rem; color: var(--text-dim);">GOD MODE v3.0</span>
           </div>
         </div>
-        <div class="sidebar-user">
-          <div class="user-avatar" id="userAvatar">👤</div>
-          <div class="user-info">
-            <span class="user-name" id="userName">admin</span>
-            <span class="user-role" id="userRole">👑 Owner</span>
-          </div>
-        </div>
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-page="overview"><span class="nav-icon">📊</span><span class="nav-label">Overview</span></button>
-          <button class="nav-item" data-page="words"><span class="nav-icon">📝</span><span class="nav-label">Word List</span></button>
-          <button class="nav-item" data-page="violations"><span class="nav-icon">⚠️</span><span class="nav-label">Violations</span></button>
-          <button class="nav-item" data-page="commands"><span class="nav-icon">⚙️</span><span class="nav-label">Commands</span></button>
-          <button class="nav-item" data-page="logs"><span class="nav-icon">📋</span><span class="nav-label">Activity Logs</span></button>
-          <button class="nav-item" data-page="users" id="usersNavItem"><span class="nav-icon">👥</span><span class="nav-label">Users</span></button>
-          <button class="nav-item" data-page="settings"><span class="nav-icon">🔧</span><span class="nav-label">Settings</span></button>
-          <button class="nav-item logout" id="logoutBtn"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></button>
+
+        <nav class="sidebar-nav" style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1;">
+          <a href="/pages/overview.html" class="nav-item active" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: var(--red-dim); color: var(--red); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">📊</span>
+            <span style="font-weight: 500;">Overview</span>
+          </a>
+          <a href="/pages/words.html" class="nav-item" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">📝</span>
+            <span style="font-weight: 500;">Word List</span>
+          </a>
+          <a href="/pages/violations.html" class="nav-item" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">⚠️</span>
+            <span style="font-weight: 500;">Violations</span>
+          </a>
+          <a href="/pages/users.html" class="nav-item" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">👥</span>
+            <span style="font-weight: 500;">Users</span>
+          </a>
+          <a href="/pages/settings.html" class="nav-item" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">⚙️</span>
+            <span style="font-weight: 500;">Settings</span>
+          </a>
+          <a href="/pages/logs.html" class="nav-item" style="
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: none; border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; transition: all var(--transition);
+          ">
+            <span style="font-size: 1.2rem;">📋</span>
+            <span style="font-weight: 500;">Activity Logs</span>
+          </a>
         </nav>
-      </aside>
-      <nav class="bottom-nav" id="bottomNav">
-        <button class="bnav-item active" data-page="overview">📊</button>
-        <button class="bnav-item" data-page="words">📝</button>
-        <button class="bnav-item" data-page="violations">⚠️</button>
-        <button class="bnav-item" data-page="commands">⚙️</button>
-        <button class="bnav-item" data-page="logs">📋</button>
-      </nav>
-      <main class="main-content">
-        <div class="mobile-header">
-          <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu"><span></span><span></span><span></span></button>
-          <h1>🔥 REGIX</h1>
-          <div class="header-time-mobile" id="headerTimeMobile">--:--</div>
+      </div>
+
+      <div class="sidebar-footer" style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
+        <div class="session-status" style="display: flex; align-items: center; gap: 0.5rem; padding: 0 1rem 0.5rem 1rem; font-size: 0.85rem;">
+          <span style="width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 2s ease-in-out infinite;"></span>
+          <span style="color: var(--red); font-weight: 500;">REGIX GOD MODE v3.0 READY</span>
         </div>
-        <div class="main-header">
-          <h1>📊 Dashboard <span>Overview</span> 🎯</h1>
-          <div class="header-time" id="headerTime">--:--:-- 🕐</div>
+        <button id="logoutBtn" class="nav-item logout" style="
+          display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; width: 100%;
+          background: transparent; color: var(--text); cursor: pointer; border: none; border-radius: var(--radius);
+        ">
+          <span style="font-size: 1.2rem;">🚪</span>
+          <span style="font-weight: 500;">Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content" style="flex: 1; padding: 2rem; overflow-y: auto;">
+      <header class="main-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700;">
+          Dashboard <span style="color: var(--red);">Overview</span>
+        </h2>
+        <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem;">
+          <span class="live-indicator" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="width: 8px; height: 8px; background: var(--red); border-radius: 50%;"></span>
+            <span style="color: var(--red);">Live Connection</span>
+          </span>
+          <div id="headerTime" style="color: var(--text-dim);">--:--:-- 🕐</div>
         </div>
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card">📝<div class="stat-label">Bad Words 🚫</div><div class="stat-value" id="statBadWords">0 🔥</div><div class="stat-change">🚫 Blocked list 📋</div></div>
-          <div class="stat-card">⚠️<div class="stat-label">Total Violations 📊</div><div class="stat-value" id="statViolations">0 🎯</div><div class="stat-change" id="statViolationChange">📈 +0 today ✨</div></div>
-          <div class="stat-card">👤<div class="stat-label">Flagged Users 🎯</div><div class="stat-value" id="statFlaggedUsers">0 🔍</div><div class="stat-change">🚨 Total unique ⚠️</div></div>
-          <div class="stat-card">🔇<div class="stat-label">Ignored Channels 🔕</div><div class="stat-value" id="statIgnoredChannels">0 🌐</div><div class="stat-change">🛡️ Bypass active ⚡</div></div>
+      </header>
+
+      <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="stat-card glass-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚫</div>
+          <div class="stat-label" style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.25rem;">Total Bad Words</div>
+          <div class="stat-value" id="statBadWords" style="font-size: 2rem; font-weight: 800; color: var(--red);">0</div>
         </div>
-        <div class="section">
-          <div class="section-header"><h2>🕐 Recent <span>Violations</span> ⚠️</h2></div>
-          <div class="table-wrapper">
-            <table>
-              <thead><tr><th>🆔 User ID</th><th>🔨 Strikes</th><th>📊 Status</th></tr></thead>
-              <tbody id="violationsTableBody"><tr><td colspan="3" class="loading-cell">⏳ Loading... 🔄</td></tr></tbody>
-            </table>
-          </div>
+
+        <div class="stat-card glass-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+          <div class="stat-label" style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.25rem;">API Requests/sec</div>
+          <div class="stat-value" id="statRequests" style="font-size: 2rem; font-weight: 800; color: var(--red);">0/s</div>
         </div>
-      </main>
-    </div>
-    <div class="toast-container" id="toastContainer"></div>
-<script>
-      /**
-       * REGIX GOD MODE — Three.js 3D Scene (Inline)
-       */
-      (function() {
-        if (typeof THREE === 'undefined') return;
-        
-        const canvas = document.getElementById('threeCanvas');
-        if (!canvas) return;
-        
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({
-          canvas: canvas,
-          alpha: true,
-          antialias: true
-        });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        camera.position.z = 50;
-        
-        const geometry = new THREE.BufferGeometry();
-        const positions = [];
-        const colors = [];
-        
-        const color = new THREE.Color();
-        
-        for (let i = 0; i < 2000; i++) {
-          const x = (Math.random() - 0.5) * 200;
-          const y = (Math.random() - 0.5) * 200;
-          const z = (Math.random() - 0.5) * 200;
-          
-          positions.push(x, y, z);
-          color.setHSL(Math.random(), 0.7, 0.5);
-          colors.push(color.r, color.g, color.b);
-        }
-        
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        
-        const material = new THREE.PointsMaterial({
-          size: 1,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.6
-        });
-        
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
-        
-        let mouseX = 0;
-        let mouseY = 0;
-        
-        document.addEventListener('mousemove', (e) => {
-          mouseX = (e.clientX / window.innerWidth) - 0.5;
-          mouseY = (e.clientY / window.innerHeight) - 0.5;
-        });
-        
-        window.addEventListener('resize', () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-        
-        function animate() {
-          requestAnimationFrame(animate);
-          particles.rotation.x += 0.0005;
-          particles.rotation.y += 0.001;
-          renderer.render(scene, camera);
-        }
-        
-        animate();
-      })();
-    </script>
-    <script src="../app.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', async () => {
+
+        <div class="stat-card glass-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌐</div>
+          <div class="stat-label" style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.25rem;">Discord Guilds</div>
+          <div class="stat-value" id="statGuilds" style="font-size: 2rem; font-weight: 800; color: var(--red);">1</div>
+        </div>
+
+        <div class="stat-card glass-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+          <div class="stat-label" style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.25rem;">Flagged Users</div>
+          <div class="stat-value" id="statFlaggedUsers" style="font-size: 2rem; font-weight: 800; color: var(--red);">0</div>
+        </div>
+      </div>
+
+      <section class="section" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #fff;">🔥 Quick Actions</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn-glow-primary" style="
+            position: relative; overflow: hidden; padding: 0.75rem 2rem; border: 1px solid var(--red);
+            border-radius: var(--radius); background: transparent; color: #fff; cursor: pointer; font-weight: 600;
+          ">
+            🚀 Deploy Commands
+          </button>
+          <button class="btn-glow-secondary" style="
+            padding: 0.75rem 2rem; border: 1px solid var(--border); border-radius: var(--radius);
+            background: transparent; color: var(--text); cursor: pointer; font-weight: 600;
+          ">
+            📥 Export Logs
+          </button>
+        </div>
+      </section>
+
+      <section class="section" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #fff;">📋 Recent Violations</h3>
+        <div class="table-wrapper" style="overflow-y: auto; max-height: 20rem;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead style="color: var(--text-dim); text-transform: uppercase; font-size: 0.8rem;">
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="padding: 0.5rem 1rem; text-align: left;">User ID</th>
+                <th style="padding: 0.5rem 1rem; text-align: left;">Strikes</th>
+                <th style="padding: 0.5rem 1rem; text-align: left;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="violationsTableBody" style="font-size: 0.9rem;"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/three-init.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
         const data = await api.get('/bot/data');
-        document.getElementById('statBadWords').textContent = (data.words?.badWords?.length || 0) + ' 🔥';
-        document.getElementById('statIgnoredChannels').textContent = (data.permissions?.ignoredChannels?.length || 0);
-        
+        document.getElementById('statBadWords').textContent = data.words?.badWords?.length || 0;
+        document.getElementById('statGuilds').textContent = '1';
+
         const violations = data.violations || {};
-        const totalViolations = Object.values(violations).reduce((sum, v) => sum + v, 0);
-        document.getElementById('statViolations').textContent = totalViolations + ' 🎯';
-        document.getElementById('statFlaggedUsers').textContent = Object.keys(violations).length + ' 🔍';
-        
+        document.getElementById('statFlaggedUsers').textContent = Object.keys(violations).length;
+
         const tbody = document.getElementById('violationsTableBody');
         const entries = Object.entries(violations).slice(0, 10);
         if (entries.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">✨ No violations recorded</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-dim);">✨ No violations recorded</td></tr>';
         } else {
           tbody.innerHTML = entries.map(([userId, strikes]) => `
-            <tr>
-              <td><code>${userId}</code></td>
-              <td>${strikes}/${data.config?.maxStrikes || 3}</td>
-              <td>${strikes >= (data.config?.maxStrikes || 3) ? '🚫 BANNED' : '⚠️ Active'}</td>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 0.75rem 1rem; font-family: monospace; color: var(--red);">${userId}</td>
+              <td style="padding: 0.75rem 1rem; color: var(--text-dim);">${strikes}</td>
+              <td style="padding: 0.75rem 1rem;">
+                <span style="
+                  padding: 0.25rem 0.75rem; font-size: 0.8rem; border-radius: 9999px;
+                  background: ${strikes >= 3 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)'};
+                  color: ${strikes >= 3 ? 'var(--red)' : '#eab308'};
+                ">
+                  ${strikes >= 3 ? '🚫 BANNED' : '⚠️ Active'}
+                </span>
+              </td>
             </tr>
           `).join('');
         }
-      });
-    </script>
-  </body>
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+    });
+
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+      await api.post('/logout');
+      api.clearToken();
+      sessionStorage.removeItem('regix_auth');
+      window.location.href = '/login.html';
+    });
+
+    setInterval(() => {
+      document.getElementById('headerTime').textContent = new Date().toLocaleTimeString() + ' 🕐';
+    }, 1000);
+  </script>
+  <script src="/app.js"></script>
+</body>
 </html>

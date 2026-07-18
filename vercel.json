@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/express-app.js",
+      "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
@@ -19,7 +19,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "api/express-app.js"
+      "dest": "api/index.js"
     }
   ]
 }

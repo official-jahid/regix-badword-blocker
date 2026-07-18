@@ -1,5 +1,29 @@
 [
   {
+    "id": "ce36b521",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard app initialized",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-18T11:25:37.426Z"
+  },
+  {
+    "id": "af7852af",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-18T11:08:44.997Z"
+  },
+  {
+    "id": "23f05814",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard app initialized",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-18T11:08:31.732Z"
+  },
+  {
     "id": "fe3428f5",
     "user": "admin",
     "action": "login",
