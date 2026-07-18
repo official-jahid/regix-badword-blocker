@@ -1,7 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
-  "installCommand": "npm install",
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs@18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
