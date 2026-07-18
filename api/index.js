@@ -6,7 +6,7 @@
  * exports a serverless-compatible handler.
  */
 
-import { createApp } from "../dashboard/app.js";
+import { createApp } from "../dashboard/express-app.js";
 
 // Create the Express app once and cache it
 let app;

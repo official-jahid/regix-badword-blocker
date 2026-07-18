@@ -1,5 +1,21 @@
 [
   {
+    "id": "34eaf990",
+    "user": "admin",
+    "action": "login",
+    "details": "👤 User logged in: admin",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T20:13:32.763Z"
+  },
+  {
+    "id": "7649076a",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard app initialized",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-17T20:13:31.135Z"
+  },
+  {
     "id": "f9aca722",
     "user": "admin",
     "action": "login",

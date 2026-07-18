@@ -1,9 +1,7 @@
 /**
- * 🔥 REGIX GOD MODE — Local Development Server
- * ==============================================
- * This file is only for local development. It imports the
- * Express app from app.js and starts listening on a port.
- * Vercel uses api/index.js instead (serverless function).
+ * 🔥 REGIX GOD MODE — Dashboard Server
+ * ===================================
+ * Starts the Express server for local development and Render.
  */
 
 import { createApp } from "./express-app.js";
@@ -17,7 +15,7 @@ app.listen(PORT, "0.0.0.0", () => {
 ╔══════════════════════════════════════════╗
 ║     🔥 REGIX GOD MODE DASHBOARD v3.0    ║
 ╠══════════════════════════════════════════╣
-║  🌐 http://localhost:${PORT}              ║
+║  🌐 http://0.0.0.0:${PORT}              ║
 ║  👤 admin / 🔑 Regix@2024              ║
 ║  📡 API endpoints ready                  ║
 ║  🔐 JWT auth active                      ║
