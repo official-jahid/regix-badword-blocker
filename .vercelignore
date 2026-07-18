@@ -20,8 +20,6 @@ logs/
 src/
 scripts/
 
-data/
-
 .git/
 .gitignore
 
@@ -42,3 +40,7 @@ LICENSE
 /README.md
 
 dashboard/package-lock.json
+dashboard/bun.lock
+dashboard/pages/
+
+task_checklist.md
