@@ -1,0 +1,7 @@
+/**
+ * 🔥 REGIX GOD MODE — Express App Module
+ * ======================================
+ * Re-export from express-app.js for compatibility
+ */
+export * from "./express-app.js";
+export { createApp } from "./express-app.js";

@@ -2,7 +2,7 @@
  * 🔥 REGIX GOD MODE — Vercel Serverless API Entry Point
  * ======================================================
  * This file is the entry point for Vercel's API handling.
- * It imports the Express app from dashboard/express-app.js and
+ * It imports the Express app from public/express-app.js and
  * exports a serverless-compatible handler.
  *
  * IMPORTANT: No persistent listeners (no app.listen()).
@@ -10,7 +10,7 @@
  * All errors are caught and logged to prevent FUNCTION_INVOCATION_FAILED.
  */
 
-import { createApp } from "../dashboard/express-app.js";
+import { createApp } from "../public/express-app.js";
 
 // Cache the Express app instance across warm invocations
 let appPromise = null;

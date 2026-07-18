@@ -7,15 +7,15 @@ build/
 
 .env
 .env.local
-.env.\*.local
+.env.*.local
 
 logs/
-\*.log
+*.log
 
 .vscode/
 .idea/
 
-\*.tsbuildinfo
+*.tsbuildinfo
 
 src/
 scripts/
@@ -39,8 +39,10 @@ LICENSE
 /LICENSE
 /README.md
 
-dashboard/package-lock.json
-dashboard/bun.lock
-dashboard/pages/
+public/package-lock.json
+public/bun.lock
+public/pages/
+public/node_modules/
+public/package.json
 
 task_checklist.md
