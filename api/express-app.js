@@ -38,8 +38,11 @@ function writeJSON(path, data) {
   }
 }
 
-// ─── App Setup ────────────────────────────────────────────────────────────
-export async function createApp() {
+let appInstance = null;
+
+export default async function createApp() {
+  if (appInstance) return appInstance;
+  
   const app = express();
 
   // ─── Initialize data directory ──────────────────────────────────
@@ -1257,5 +1260,6 @@ export async function createApp() {
     res.status(500).json({ error: "🚨 Internal server error 💥" });
   });
 
+  appInstance = app;
   return app;
 }

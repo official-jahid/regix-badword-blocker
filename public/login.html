@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🔐 Login - REGIX GOD MODE 🔥</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
   </head>
   <body>
 <script>
-       if (sessionStorage.getItem("regix_auth") === "true" || sessionStorage.getItem("regix_access")) {
-         window.location.replace("/pages/overview.html");
-       }
-     </script>
+        if (sessionStorage.getItem("regix_auth") === "true" || sessionStorage.getItem("regix_access")) {
+          window.location.replace("/login.html");
+        }
+      </script>
 
     <div class="scene-container">
       <canvas id="threeCanvas"></canvas>

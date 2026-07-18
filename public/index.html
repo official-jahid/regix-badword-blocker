@@ -238,7 +238,17 @@
       </footer>
     </div>
 
-    <script src="three-init.js"></script>
-    <script src="app.js"></script>
-  </body>
+<script src="three-init.js"></script>
+     <script src="app.js"></script>
+     
+     <script>
+       // Initialize particle background for root path
+       document.addEventListener('DOMContentLoaded', () => {
+         const canvas = document.getElementById('threeCanvas');
+         if (canvas && typeof initParticles === 'function') {
+           initParticles(canvas);
+         }
+       });
+     </script>
+   </body>
 </html>

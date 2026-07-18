@@ -1,85 +1,123 @@
 /**
- * REGIX Three.js 3D Scene Initialization
- * Uses Three.js via CDN - no module import needed
+ * REGIX — Red Moving Particles Background
+ * High-performance canvas-based particle system with crimson theme
  */
 
 (function() {
-  if (typeof THREE === 'undefined') return;
-
   const canvas = document.getElementById('threeCanvas');
-  if (!canvas) return;
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    alpha: true,
-    antialias: true
-  });
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  camera.position.z = 50;
-
-  const particleCount = 1500;
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-  const material = new THREE.PointsMaterial({
-    size: 1.5,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.7,
-    blending: THREE.AdditiveBlending
-  });
-
-  const particles = new THREE.Points(geometry, material);
-  scene.add(particles);
-
-  const color = new THREE.Color();
-  for (let i = 0; i < particleCount; i++) {
-    const i3 = i * 3;
-    positions[i3] = (Math.random() - 0.5) * 300;
-    positions[i3 + 1] = (Math.random() - 0.5) * 300;
-    positions[i3 + 2] = (Math.random() - 0.5) * 300;
-
-    const hue = 0;
-    const sat = 0.8 + Math.random() * 0.2;
-    const light = 0.4 + Math.random() * 0.4;
-    color.setHSL(hue, sat, light);
-    colors[i3] = color.r;
-    colors[i3 + 1] = color.g;
-    colors[i3 + 2] = color.b;
+  if (!canvas) {
+    const fallbackCanvas = document.createElement('canvas');
+    fallbackCanvas.id = 'particleCanvas';
+    fallbackCanvas.className = 'particle-canvas';
+    document.body.prepend(fallbackCanvas);
+    initParticles(fallbackCanvas);
+    return;
   }
 
-  geometry.attributes.position.needsUpdate = true;
-  geometry.attributes.color.needsUpdate = true;
+  initParticles(canvas);
+})();
 
-  let mouseX = 0, mouseY = 0;
+function initParticles(canvas) {
+  const ctx = canvas.getContext('2d', { alpha: true });
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = [];
+  const particleCount = 100;
+  
+  class Particle {
+    constructor() {
+      this.reset();
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 3 + 1;
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.speedY = (Math.random() - 0.5) * 0.3;
+      this.alpha = Math.random() * 0.5 + 0.3;
+      this.orbitRadius = Math.random() * 30;
+      this.orbitAngle = Math.random() * Math.PI * 2;
+      this.orbitSpeed = (Math.random() - 0.5) * 0.02;
+    }
+
+    reset() {
+      this.life = 0;
+    }
+
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.orbitAngle += this.orbitSpeed;
+
+      if (this.x < -20) this.x = canvas.width + 20;
+      if (this.x > canvas.width + 20) this.x = -20;
+      if (this.y < -20) this.y = canvas.height + 20;
+      if (this.y > canvas.height + 20) this.y = -20;
+    }
+
+    draw() {
+      const orbitX = Math.sin(this.orbitAngle) * this.orbitRadius * 0.1;
+      const orbitY = Math.cos(this.orbitAngle) * this.orbitRadius * 0.1;
+      
+      const gradient = ctx.createRadialGradient(
+        this.x + orbitX, this.y + orbitY, 0,
+        this.x + orbitX, this.y + orbitY, this.size * 2
+      );
+      
+      gradient.addColorStop(0, `rgba(239, 68, 68, ${this.alpha})`);
+      gradient.addColorStop(0.5, `rgba(255, 30, 39, ${this.alpha * 0.6})`);
+      gradient.addColorStop(1, `rgba(127, 29, 31, 0)`);
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(this.x + orbitX, this.y + orbitY, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+
+  let mouseX = 0;
+  let mouseY = 0;
+  
   document.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX / window.innerWidth) - 0.5;
-    mouseY = (e.clientY / window.innerHeight) - 0.5;
-  });
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    mouseX = (e.clientX / canvas.width) - 0.5;
+    mouseY = (e.clientY / canvas.height) - 0.5;
   });
 
   function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    const time = Date.now() * 0.00005;
+    const pulse = Math.sin(time) * 0.5 + 0.5;
+    
+    const pulseX = canvas.width * 0.5 + Math.cos(time * 0.3) * 100;
+    const pulseY = canvas.height * 0.3 + Math.sin(time * 0.2) * 80;
+    
+    const glowGradient = ctx.createRadialGradient(
+      pulseX, pulseY, 0,
+      pulseX, pulseY, 300
+    );
+    glowGradient.addColorStop(0, `rgba(255, 30, 39, ${pulse * 0.03})`);
+    glowGradient.addColorStop(1, `rgba(8, 8, 12, 0)`);
+    
+    ctx.fillStyle = glowGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     requestAnimationFrame(animate);
-    particles.rotation.x += 0.0003 + mouseY * 0.0001;
-    particles.rotation.y += 0.0005 + mouseX * 0.0001;
-    const time = Date.now() * 0.0001;
-    particles.position.x = Math.sin(time) * 0.5;
-    particles.position.y = Math.cos(time * 0.7) * 0.5;
-    renderer.render(scene, camera);
   }
 
   animate();
-})();
+}
