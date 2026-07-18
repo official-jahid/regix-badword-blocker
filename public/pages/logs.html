@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>📋 Activity Logs - REGIX GOD MODE 🔥</title>
+    <title>📋 Logs - REGIX GOD MODE 🔥</title>
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <canvas id="particleCanvas"></canvas>
-    <script>
-      if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
-        window.location.replace("../index.html");
-      }
-    </script>
+<script>
+        if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
+          window.location.replace("/login.html");
+        }
+      </script>
+    
+    <div class="scene-container">
+      <canvas id="threeCanvas"></canvas>
+    </div>
+    
     <div class="dashboard">
-      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-brand">
@@ -26,10 +30,10 @@
             </div>
             <div class="brand-text">
               <h2>🔥 REGIX</h2>
-              <span class="brand-sub">⚡ GOD MODE v2.0</span>
+              <span class="brand-sub">⚡ GOD MODE v3.0</span>
             </div>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
           </div>
-          <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
         </div>
         <div class="sidebar-user">
           <div class="user-avatar" id="userAvatar">👤</div>
@@ -46,10 +50,8 @@
           <button class="nav-item active" data-page="logs"><span class="nav-icon">📋</span><span class="nav-label">Activity Logs</span></button>
           <button class="nav-item" data-page="users" id="usersNavItem"><span class="nav-icon">👥</span><span class="nav-label">Users</span></button>
           <button class="nav-item" data-page="settings"><span class="nav-icon">🔧</span><span class="nav-label">Settings</span></button>
-        </nav>
-        <div class="sidebar-footer">
           <button class="nav-item logout" id="logoutBtn"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></button>
-        </div>
+        </nav>
       </aside>
       <nav class="bottom-nav" id="bottomNav">
         <button class="bnav-item" data-page="overview">📊</button>
@@ -65,31 +67,75 @@
           <div class="header-time-mobile" id="headerTimeMobile">--:--</div>
         </div>
         <div class="main-header">
-          <h1>📋 Activity <span>Logs</span> 📊</h1>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm" onclick="refreshLogs()">🔄 Refresh</button>
-            <button class="btn btn-sm" onclick="exportLogs()">📥 Export Logs</button>
+          <h1>📋 <span>Activity Logs</span> 🔍</h1>
+          <div class="header-time" id="headerTime">--:--:-- 🕐</div>
+        </div>
+        
+        <div class="section">
+          <div class="section-header"><h2>📊 <span>Log Statistics</span></h2></div>
+          <div class="stats-grid" id="logStats">
+            <div class="stat-card">📝<div class="stat-label">Total Logs</div><div class="stat-value" id="logTotal">0</div></div>
+            <div class="stat-card">👤<div class="stat-label">Active Users</div><div class="stat-value" id="logUsers">0</div></div>
           </div>
         </div>
+        
         <div class="section">
-          <div class="section-header"><h2>🕐 All <span>Activity</span> 📋</h2></div>
+          <div class="section-header"><h2>📋 <span>Recent Logs</span></h2></div>
+          <div class="form-group" style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+            <button class="btn-outline" onclick="exportLogs('json')">📥 Export JSON</button>
+            <button class="btn-outline" onclick="exportLogs('csv')">📥 Export CSV</button>
+            <button class="btn-glow" id="clearLogsBtn" style="margin-left:auto">🗑️ Clear All</button>
+          </div>
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>🕐 Time</th><th>👤 User</th><th>📌 Action</th><th>📝 Details</th></tr></thead>
+              <thead><tr><th>🕐 Time</th><th>👤 User</th><th>🔧 Action</th><th>📝 Details</th></tr></thead>
               <tbody id="logsTableBody"><tr><td colspan="4" class="loading-cell">⏳ Loading... 🔄</td></tr></tbody>
             </table>
           </div>
         </div>
       </main>
     </div>
-    <div class="modal-overlay hidden" id="modalOverlay">
-      <div class="modal" id="modalContent">
-        <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" id="modalClose">✕</button></div>
-        <div class="modal-body" id="modalBody"></div>
-      </div>
-    </div>
     <div class="toast-container" id="toastContainer"></div>
-    <script src="../particles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+    <script src="../three-init.js"></script>
     <script src="../app.js"></script>
+    <script>
+      async function loadLogs() {
+        const data = await api.get('/logs');
+        const tbody = document.getElementById('logsTableBody');
+        
+        if (!data.logs || data.logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">✨ No logs recorded</td></tr>';
+        } else {
+          tbody.innerHTML = data.logs.map(log => `
+            <tr>
+              <td>${new Date(log.timestamp).toLocaleString()}</td>
+              <td>${log.user}</td>
+              <td>${log.action}</td>
+              <td>${log.details}</td>
+            </tr>
+          `).join('');
+        }
+        
+        const stats = await api.get('/logs/stats');
+        document.getElementById('logTotal').textContent = stats.total || 0;
+        document.getElementById('logUsers').textContent = stats.topUsers?.length || 0;
+      }
+      
+      async function exportLogs(format) {
+        window.open(`/api/logs/export?format=${format}`, '_blank');
+      }
+      
+      document.getElementById('clearLogsBtn').addEventListener('click', async () => {
+        if (!confirm('Clear ALL logs?')) return;
+        const result = await api.delete('/logs');
+        if (result.success) {
+          showToast('✅ All logs cleared', 'success');
+          loadLogs();
+        }
+      });
+      
+      document.addEventListener('DOMContentLoaded', loadLogs);
+    </script>
   </body>
 </html>

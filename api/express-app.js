@@ -1,13 +1,6 @@
 /**
  * 🔥 REGIX GOD MODE — Express App Module (Vercel-Compatible)
- * ===========================================================
- * Exports a createApp() function that builds the Express app.
- * Does NOT call app.listen() — that's for server.js (local dev).
- * JWT-only authentication (no sessions — serverless compatible).
- * File-based storage in /tmp/data/ for Vercel ephemeral filesystem.
- *
- * IMPORTANT: No top-level side effects! All initialization happens
- * inside createApp() to prevent FUNCTION_INVOCATION_FAILED on Vercel.
+ * Three.js 3D Web Dashboard Backend
  */
 
 import bcrypt from "bcryptjs";
@@ -24,10 +17,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ─── Paths ──────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
 const DATA_DIR = IS_VERCEL ? "/tmp/data" : join(__dirname, "..", "data");
-const DASH_DIR = __dirname;
+const DASH_DIR = join(__dirname, "..", "public");
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "regix-god-mode-jwt-secret-2024-v3";
+const JWT_SECRET = process.env.JWT_SECRET || "regix-god-mode-jwt-secret-2024-v3";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 function readJSON(path) {
@@ -50,7 +42,7 @@ function writeJSON(path, data) {
 export async function createApp() {
   const app = express();
 
-  // ─── Initialize data directory (safe, wrapped in try/catch) ──────────
+  // ─── Initialize data directory ──────────────────────────────────
   try {
     if (!existsSync(DATA_DIR)) {
       mkdirSync(DATA_DIR, { recursive: true });
@@ -172,12 +164,10 @@ export async function createApp() {
     }
   }
 
-  // Seed admin user (fire-and-forget, errors are caught internally)
   seedAdmin().catch((err) => {
     console.error("[REGIX] seedAdmin error:", err);
   });
 
-  // Log app initialization
   try {
     addLog("server_start", "🚀 Dashboard app initialized", "system");
   } catch {}
@@ -187,7 +177,7 @@ export async function createApp() {
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-  // Rate limiting (simple in-memory — resets on cold start in serverless)
+  // Rate limiting
   const rateLimitMap = new Map();
   function rateLimit(maxRequests = 60, windowMs = 60000) {
     return (req, res, next) => {
@@ -245,9 +235,7 @@ export async function createApp() {
           req.user = user;
           return next();
         }
-      } catch {
-        /* invalid token */
-      }
+      } catch {}
     }
     res.status(401).json({ error: "🔐 Unauthorized — Please login first 👤" });
   }
@@ -284,13 +272,11 @@ export async function createApp() {
         return res.status(401).json({ error: "❌ Invalid credentials 🔐" });
       }
 
-      // Update last login
       user.lastLogin = new Date().toISOString();
       const idx = users.findIndex((u) => u.id === user.id);
       users[idx] = user;
       writeJSON(DB.users, users);
 
-      // Generate tokens
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
 
@@ -1252,9 +1238,25 @@ export async function createApp() {
     });
   });
 
-  // ─── Serve static files ──────────────────────────────────────────────────
+  // ─── Auth middleware ───────────────────────────────────────────────────────
+  function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        jwt.verify(authHeader.slice(7), JWT_SECRET);
+        return next();
+      } catch {}
+    }
+    return res.redirect("/login.html");
+  }
+
+  // ─── Protected dashboard pages ─────────────────────────────────────────────
+  app.get("/pages/:page.html", requireAuth, (req, res) => {
+    res.sendFile(join(DASH_DIR, "pages", req.params.page + ".html"));
+  });
+
+  // ─── Serve public static files (login, index, css, js) ───────────────────────────
   app.use(express.static(DASH_DIR));
-  app.use("/pages", express.static(join(DASH_DIR, "pages")));
 
   // ─── SPA fallback ────────────────────────────────────────────────────────
   app.get(/^\/(?!api).*/, (req, res) => {

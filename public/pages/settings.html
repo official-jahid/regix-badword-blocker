@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⚙️ Settings - REGIX GOD MODE 🔥</title>
+    <title>🔧 Settings - REGIX GOD MODE 🔥</title>
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <canvas id="particleCanvas"></canvas>
-    <script>
-      if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
-        window.location.replace("../index.html");
-      }
-    </script>
+<script>
+        if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
+          window.location.replace("/login.html");
+        }
+      </script>
+    
+    <div class="scene-container">
+      <canvas id="threeCanvas"></canvas>
+    </div>
+    
     <div class="dashboard">
-      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-brand">
@@ -26,10 +30,10 @@
             </div>
             <div class="brand-text">
               <h2>🔥 REGIX</h2>
-              <span class="brand-sub">⚡ GOD MODE v2.0</span>
+              <span class="brand-sub">⚡ GOD MODE v3.0</span>
             </div>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
           </div>
-          <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
         </div>
         <div class="sidebar-user">
           <div class="user-avatar" id="userAvatar">👤</div>
@@ -46,10 +50,8 @@
           <button class="nav-item" data-page="logs"><span class="nav-icon">📋</span><span class="nav-label">Activity Logs</span></button>
           <button class="nav-item" data-page="users" id="usersNavItem"><span class="nav-icon">👥</span><span class="nav-label">Users</span></button>
           <button class="nav-item active" data-page="settings"><span class="nav-icon">🔧</span><span class="nav-label">Settings</span></button>
-        </nav>
-        <div class="sidebar-footer">
           <button class="nav-item logout" id="logoutBtn"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></button>
-        </div>
+        </nav>
       </aside>
       <nav class="bottom-nav" id="bottomNav">
         <button class="bnav-item" data-page="overview">📊</button>
@@ -64,48 +66,97 @@
           <h1>🔥 REGIX</h1>
           <div class="header-time-mobile" id="headerTimeMobile">--:--</div>
         </div>
-        <div class="main-header"><h1>🔧 Bot <span>Settings</span> ⚙️</h1></div>
+        <div class="main-header">
+          <h1>🔧 <span>Settings</span> ⚙️</h1>
+          <div class="header-time" id="headerTime">--:--:-- 🕐</div>
+        </div>
+        
         <div class="section">
-          <div class="section-header"><h2>⚙️ Configuration <span>Editor</span> 🛠️</h2></div>
-          <div class="form-row">
-            <div class="form-group"><label>⏱️ Timeout Duration (ms)</label><input type="number" id="setTimeout" /></div>
-            <div class="form-group"><label>🔨 Max Strikes</label><input type="number" id="setMaxStrikes" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>📢 Notification Channel ID</label><input type="text" id="setNotifChannel" /></div>
-            <div class="form-group"><label>📝 Log Channel ID</label><input type="text" id="setLogChannel" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>🖼️ DM Warning Title</label><input type="text" id="setDmTitle" /></div>
-            <div class="form-group"><label>🖼️ Log Title</label><input type="text" id="setLogTitle" /></div>
-          </div>
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem;">
-            <button class="btn-glow btn-sm" onclick="saveSettings()">💾 Save Settings ✨</button>
-            <button class="btn btn-sm" onclick="loadSettings()">🔄 Reset Form 🔁</button>
+          <div class="section-header"><h2>⚙️ <span>Bot Configuration</span></h2></div>
+          <div class="form-group" style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+            <input type="number" id="maxStrikes" class="form-input" placeholder="Max strikes (default 3)" style="flex:1">
+            <input type="number" id="timeoutMins" class="form-input" placeholder="Timeout minutes (default 1)" style="flex:1">
+            <button class="btn-glow" id="updateConfigBtn">💾 Save</button>
           </div>
         </div>
+        
         <div class="section">
-          <div class="section-header"><h2>🛡️ Permissions <span>Overview</span> 🔐</h2></div>
+          <div class="section-header"><h2>🔇 <span>Ignored Channels</span></h2></div>
+          <div class="form-group" style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+            <input type="text" id="ignoreChannelId" class="form-input" placeholder="Channel ID to ignore..." style="flex:1">
+            <button class="btn-glow" id="addIgnoreChannelBtn">➕ Add</button>
+          </div>
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>📌 Type</th><th>📋 ID</th></tr></thead>
-              <tbody>
-                <tr id="ignoredChannelsRow"><td>🔇 Ignored Channels</td><td style="color: #666">⏳ Loading... 🔄</td></tr>
-                <tr id="allowedUsersRow"><td>✅ Allowed Users</td><td style="color: #666">⏳ Loading... 🔄</td></tr>
-              </tbody>
+              <thead><tr><th>Channel ID</th><th>Actions</th></tr></thead>
+              <tbody id="ignoredChannelsBody"><tr><td colspan="2" class="loading-cell">⏳ Loading... 🔄</td></tr></tbody>
             </table>
           </div>
         </div>
       </main>
     </div>
-    <div class="modal-overlay hidden" id="modalOverlay">
-      <div class="modal" id="modalContent">
-        <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" id="modalClose">✕</button></div>
-        <div class="modal-body" id="modalBody"></div>
-      </div>
-    </div>
     <div class="toast-container" id="toastContainer"></div>
-    <script src="../particles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+    <script src="../three-init.js"></script>
     <script src="../app.js"></script>
+    <script>
+      async function loadConfig() {
+        const data = await api.get('/bot/permissions');
+        const tbody = document.getElementById('ignoredChannelsBody');
+        const channels = data.ignoredChannels || [];
+        
+        if (channels.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="2" style="text-align:center">✨ No ignored channels</td></tr>';
+        } else {
+          tbody.innerHTML = channels.map(ch => `
+            <tr>
+              <td><code>${ch}</code></td>
+              <td><button class="btn-outline" onclick="removeIgnoreChannel('${ch}')">🗑️ Remove</button></td>
+            </tr>
+          `).join('');
+        }
+      }
+      
+      async function updateConfig() {
+        const config = {};
+        const maxStrikes = document.getElementById('maxStrikes').value;
+        const timeoutMins = document.getElementById('timeoutMins').value;
+        
+        if (maxStrikes) config.maxStrikes = parseInt(maxStrikes);
+        if (timeoutMins) config.timeoutDurationMs = parseInt(timeoutMins) * 60000;
+        
+        const result = await api.put('/bot/config', config);
+        if (result.success) {
+          showToast('✅ Config updated', 'success');
+        } else {
+          showToast(result.error, 'error');
+        }
+      }
+      
+      async function addIgnoreChannel() {
+        const channelId = document.getElementById('ignoreChannelId').value.trim();
+        if (!channelId) return;
+        const result = await api.post('/bot/permissions/ignore-channel', { channelId });
+        if (result.success) {
+          showToast('🔇 Channel ignored', 'success');
+          document.getElementById('ignoreChannelId').value = '';
+          loadConfig();
+        } else {
+          showToast(result.error, 'error');
+        }
+      }
+      
+      async function removeIgnoreChannel(channelId) {
+        const result = await api.delete('/bot/permissions/ignore-channel/' + channelId);
+        if (result.success) {
+          showToast('🔊 Channel unignored', 'success');
+          loadConfig();
+        }
+      }
+      
+      document.getElementById('updateConfigBtn').addEventListener('click', updateConfig);
+      document.getElementById('addIgnoreChannelBtn').addEventListener('click', addIgnoreChannel);
+      document.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
   </body>
 </html>

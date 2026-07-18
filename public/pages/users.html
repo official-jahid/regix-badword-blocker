@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>👥 User Management - REGIX GOD MODE 🔥</title>
+    <title>👥 Users - REGIX GOD MODE 🔥</title>
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <canvas id="particleCanvas"></canvas>
-    <script>
-      if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
-        window.location.replace("../index.html");
-      }
-    </script>
+<script>
+        if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
+          window.location.replace("/login.html");
+        }
+      </script>
+    
+    <div class="scene-container">
+      <canvas id="threeCanvas"></canvas>
+    </div>
+    
     <div class="dashboard">
-      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-brand">
@@ -26,10 +30,10 @@
             </div>
             <div class="brand-text">
               <h2>🔥 REGIX</h2>
-              <span class="brand-sub">⚡ GOD MODE v2.0</span>
+              <span class="brand-sub">⚡ GOD MODE v3.0</span>
             </div>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
           </div>
-          <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
         </div>
         <div class="sidebar-user">
           <div class="user-avatar" id="userAvatar">👤</div>
@@ -46,10 +50,8 @@
           <button class="nav-item" data-page="logs"><span class="nav-icon">📋</span><span class="nav-label">Activity Logs</span></button>
           <button class="nav-item active" data-page="users" id="usersNavItem"><span class="nav-icon">👥</span><span class="nav-label">Users</span></button>
           <button class="nav-item" data-page="settings"><span class="nav-icon">🔧</span><span class="nav-label">Settings</span></button>
-        </nav>
-        <div class="sidebar-footer">
           <button class="nav-item logout" id="logoutBtn"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></button>
-        </div>
+        </nav>
       </aside>
       <nav class="bottom-nav" id="bottomNav">
         <button class="bnav-item" data-page="overview">📊</button>
@@ -64,29 +66,84 @@
           <h1>🔥 REGIX</h1>
           <div class="header-time-mobile" id="headerTimeMobile">--:--</div>
         </div>
-        <div class="main-header"><h1>👥 User <span>Management</span> 🎛️</h1></div>
+        <div class="main-header">
+          <h1>👥 <span>Users</span> 🎯</h1>
+          <div class="header-time" id="headerTime">--:--:-- 🕐</div>
+        </div>
+        
         <div class="section">
-          <div class="section-header">
-            <h2>👤 Dashboard <span>Users</span> 👥</h2>
-            <button class="btn-glow btn-sm" onclick="openAddUserModal()">➕ Create User ✨</button>
+          <div class="section-header"><h2>➕ <span>Create New User</span></h2></div>
+          <div class="form-group" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+            <input type="text" id="newUsername" class="form-input" placeholder="Username" style="flex:1">
+            <input type="password" id="newPassword" class="form-input" placeholder="Password" style="flex:1">
+            <button class="btn-glow" id="createUserBtn">✨ Create</button>
           </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-header"><h2>📋 <span>All Users</span></h2></div>
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>👤 Username</th><th>👑 Role</th><th>📅 Created</th><th>🗑️</th></tr></thead>
+              <thead><tr><th>👤 Username</th><th>🎭 Role</th><th>📅 Created</th><th>🔧 Actions</th></tr></thead>
               <tbody id="usersTableBody"><tr><td colspan="4" class="loading-cell">⏳ Loading... 🔄</td></tr></tbody>
             </table>
           </div>
         </div>
       </main>
     </div>
-    <div class="modal-overlay hidden" id="modalOverlay">
-      <div class="modal" id="modalContent">
-        <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" id="modalClose">✕</button></div>
-        <div class="modal-body" id="modalBody"></div>
-      </div>
-    </div>
     <div class="toast-container" id="toastContainer"></div>
-    <script src="../particles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+    <script src="../three-init.js"></script>
     <script src="../app.js"></script>
+    <script>
+      async function loadUsers() {
+        const data = await api.get('/users');
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (!data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">✨ No users found</td></tr>';
+        } else {
+          tbody.innerHTML = data.map(user => `
+            <tr>
+              <td>${user.avatar} ${user.username}</td>
+              <td>${user.role === 'owner' ? '👑 Owner' : '🛡️ Admin'}</td>
+              <td>${new Date(user.created).toLocaleDateString()}</td>
+              <td>
+                <button class="btn-outline" onclick="deleteUser('${user.id}')">🗑️ Delete</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+      
+      async function createUser() {
+        const username = document.getElementById('newUsername').value.trim();
+        const password = document.getElementById('newPassword').value.trim();
+        
+        if (!username || !password) return showToast('❌ Missing fields', 'error');
+        
+        const result = await api.post('/users', { username, password, role: 'admin' });
+        if (result.success) {
+          showToast('✅ User created', 'success');
+          document.getElementById('newUsername').value = '';
+          document.getElementById('newPassword').value = '';
+          loadUsers();
+        } else {
+          showToast(result.error, 'error');
+        }
+      }
+      
+      async function deleteUser(id) {
+        if (!confirm('Delete this user?')) return;
+        const result = await api.delete('/users/' + id);
+        if (result.success) {
+          showToast('✅ User deleted', 'success');
+          loadUsers();
+        }
+      }
+      
+      document.getElementById('createUserBtn').addEventListener('click', createUser);
+      document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
   </body>
 </html>

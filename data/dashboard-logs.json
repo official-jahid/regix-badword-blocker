@@ -1,138 +1,130 @@
 [
   {
-    "id": "34eaf990",
+    "id": "fe3428f5",
     "user": "admin",
     "action": "login",
     "details": "👤 User logged in: admin",
-    "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T20:13:32.763Z"
+    "ip": "::1",
+    "timestamp": "2026-07-18T10:34:37.654Z"
   },
   {
-    "id": "7649076a",
+    "id": "f78d57af",
     "user": "system",
     "action": "server_start",
     "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T20:13:31.135Z"
+    "timestamp": "2026-07-18T10:33:41.917Z"
   },
   {
-    "id": "f9aca722",
+    "id": "df172805",
     "user": "admin",
     "action": "login",
     "details": "👤 User logged in: admin",
     "ip": "::1",
-    "timestamp": "2026-07-17T18:52:32.896Z"
+    "timestamp": "2026-07-18T10:32:22.564Z"
   },
   {
-    "id": "46df4285",
+    "id": "3b8ecb44",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:51:38.959Z"
+    "timestamp": "2026-07-18T10:32:11.585Z"
   },
   {
-    "id": "b4ebaa63",
+    "id": "32decd07",
+    "user": "system",
+    "action": "server_start",
+    "details": "🚀 Dashboard app initialized",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-18T10:31:34.588Z"
+  },
+  {
+    "id": "d3909334",
+    "user": "admin",
+    "action": "logout",
+    "details": "👋 User logged out: admin",
+    "ip": "::1",
+    "timestamp": "2026-07-18T10:30:49.592Z"
+  },
+  {
+    "id": "8a2a1908",
     "user": "admin",
     "action": "login",
     "details": "👤 User logged in: admin",
     "ip": "::1",
-    "timestamp": "2026-07-17T18:50:26.908Z"
+    "timestamp": "2026-07-18T10:30:34.612Z"
   },
   {
-    "id": "21775402",
+    "id": "5f0b67d7",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:50:24.941Z"
+    "timestamp": "2026-07-18T10:29:16.776Z"
   },
   {
-    "id": "019044c1",
+    "id": "d539c14f",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:49:21.070Z"
+    "timestamp": "2026-07-18T10:28:49.048Z"
   },
   {
-    "id": "9a842d9c",
+    "id": "b410ae51",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:48:39.264Z"
+    "timestamp": "2026-07-18T10:28:41.523Z"
   },
   {
-    "id": "fbac40c7",
+    "id": "8102bdee",
     "user": "admin",
-    "action": "login",
-    "details": "👤 User logged in: admin",
+    "action": "violation_reset",
+    "details": "🔄 Reset violations for 1076183559796183242 (was 5)",
     "ip": "::1",
-    "timestamp": "2026-07-17T18:48:32.737Z"
+    "timestamp": "2026-07-18T10:28:41.033Z"
   },
   {
-    "id": "b1f776f8",
+    "id": "b1d59505",
     "user": "system",
-    "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "action": "system",
+    "details": "📝 Bot data updated: violations",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:48:30.786Z"
+    "timestamp": "2026-07-18T10:28:41.032Z"
   },
   {
-    "id": "b34b5316",
+    "id": "aa047d9b",
     "user": "admin",
-    "action": "login",
-    "details": "👤 User logged in: admin",
+    "action": "word_add",
+    "details": "🚫 Added bad word: \"xxx\"",
     "ip": "::1",
-    "timestamp": "2026-07-17T18:47:33.353Z"
+    "timestamp": "2026-07-18T10:25:59.236Z"
   },
   {
-    "id": "6659930f",
+    "id": "b0d35e48",
+    "user": "system",
+    "action": "system",
+    "details": "📝 Bot data updated: words",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-07-18T10:25:59.234Z"
+  },
+  {
+    "id": "492546d6",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:47:31.418Z"
+    "timestamp": "2026-07-18T10:25:20.402Z"
   },
   {
-    "id": "204089f7",
-    "user": "admin",
-    "action": "login",
-    "details": "👤 User logged in: admin",
-    "ip": "::1",
-    "timestamp": "2026-07-17T18:44:12.917Z"
-  },
-  {
-    "id": "878d6263",
-    "user": "admin",
-    "action": "login",
-    "details": "👤 User logged in: admin",
-    "ip": "::1",
-    "timestamp": "2026-07-17T18:44:07.241Z"
-  },
-  {
-    "id": "d066ed66",
+    "id": "1a36e4c7",
     "user": "system",
     "action": "server_start",
-    "details": "🚀 Dashboard server started",
+    "details": "🚀 Dashboard app initialized",
     "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:43:12.689Z"
-  },
-  {
-    "id": "1fc82a68",
-    "user": "system",
-    "action": "server_start",
-    "details": "🚀 Dashboard server started",
-    "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:34:59.304Z"
-  },
-  {
-    "id": "9f55a905",
-    "user": "system",
-    "action": "server_start",
-    "details": "🚀 Dashboard server started",
-    "ip": "127.0.0.1",
-    "timestamp": "2026-07-17T18:32:02.532Z"
+    "timestamp": "2026-07-18T10:17:35.794Z"
   }
 ]

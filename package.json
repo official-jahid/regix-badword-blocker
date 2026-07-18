@@ -1,17 +1,18 @@
 {
   "name": "regix-badword-blocker",
-  "version": "2.0.0",
-  "description": "REGIX 🔥 GOD MODE - Advanced Discord Moderation Bot (Bun + TypeScript + Discord.js v14) 💻",
+  "version": "3.0.0",
+  "description": "REGIX 🔥 GOD MODE - Advanced Discord Moderation Bot with Three.js 3D Web Dashboard",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
     "build": "echo 'Vercel build complete'",
-    "dashboard": "bun run dashboard/server.js",
-    "dashboard:dev": "bun --watch dashboard/server.js",
-    "dev:all": "concurrently \"bun run src/index.ts\" \"bun run dashboard/server.js\"",
-    "vercel-build": "echo 'Vercel build complete'"
+    "dashboard": "bun run api/server.js",
+    "dashboard:dev": "bun --watch api/server.js",
+    "dev:all": "concurrently \"bun run src/index.ts\" \"bun run api/server.js\"",
+    "vercel-build": "echo 'Vercel build complete'",
+    "lint": "eslint public/pages/**/*.js --fix"
   },
   "dependencies": {
     "@openrouter/agent": "^0.7.2",
@@ -22,6 +23,7 @@
     "discord.js": "^14.16.3",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.3",
+    "three": "^0.170.0",
     "openai": "^6.48.0",
     "zod": "^4.4.3"
   },

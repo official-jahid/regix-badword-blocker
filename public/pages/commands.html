@@ -7,14 +7,18 @@
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <canvas id="particleCanvas"></canvas>
-    <script>
-      if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
-        window.location.replace("../index.html");
-      }
-    </script>
+<script>
+        if (sessionStorage.getItem("regix_auth") !== "true" && !sessionStorage.getItem("regix_access")) {
+          window.location.replace("/login.html");
+        }
+      </script>
+    
+    <div class="scene-container">
+      <canvas id="threeCanvas"></canvas>
+    </div>
+    
     <div class="dashboard">
-      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-brand">
@@ -26,10 +30,10 @@
             </div>
             <div class="brand-text">
               <h2>🔥 REGIX</h2>
-              <span class="brand-sub">⚡ GOD MODE v2.0</span>
+              <span class="brand-sub">⚡ GOD MODE v3.0</span>
             </div>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
           </div>
-          <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
         </div>
         <div class="sidebar-user">
           <div class="user-avatar" id="userAvatar">👤</div>
@@ -46,10 +50,8 @@
           <button class="nav-item" data-page="logs"><span class="nav-icon">📋</span><span class="nav-label">Activity Logs</span></button>
           <button class="nav-item" data-page="users" id="usersNavItem"><span class="nav-icon">👥</span><span class="nav-label">Users</span></button>
           <button class="nav-item" data-page="settings"><span class="nav-icon">🔧</span><span class="nav-label">Settings</span></button>
-        </nav>
-        <div class="sidebar-footer">
           <button class="nav-item logout" id="logoutBtn"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></button>
-        </div>
+        </nav>
       </aside>
       <nav class="bottom-nav" id="bottomNav">
         <button class="bnav-item" data-page="overview">📊</button>
@@ -65,31 +67,50 @@
           <div class="header-time-mobile" id="headerTimeMobile">--:--</div>
         </div>
         <div class="main-header">
-          <h1>⚙️ Bot <span>Commands</span> 🤖</h1>
-          <button class="btn btn-sm" onclick="refreshCommands()"><span>🔄</span> Refresh</button>
+          <h1>⚙️ <span>Commands</span> 🤖</h1>
+          <div class="header-time" id="headerTime">--:--:-- 🕐</div>
         </div>
-        <div class="stats-grid mini">
-          <div class="stat-card">🟢<div class="stat-label">Bot Status</div><div class="stat-value" id="botStatus">Online ✨</div></div>
-          <div class="stat-card">⏱️<div class="stat-label">Uptime</div><div class="stat-value" id="botUptime">0s 🕐</div></div>
-          <div class="stat-card">📦<div class="stat-label">Version</div><div class="stat-value" id="botVersion">2.0.0 🔥</div></div>
-        </div>
+        
         <div class="section">
-          <div class="section-header">
-            <h2>📋 Available <span>Commands</span> 🤖</h2>
-            <p style="color: var(--text-dim); font-size: 0.85rem;">Click a command card to execute it via web control ⚙️</p>
+          <div class="section-header"><h2>📚 <span>Available Commands</span></h2></div>
+          <div class="commands-landing" id="commandsList">
+            <div class="cmd-landing-card">
+              <div class="cmd-icon">❓</div>
+              <div class="cmd-name">/help</div>
+              <div class="cmd-desc">Show all available commands with descriptions and access levels</div>
+              <div class="cmd-access">All Roles</div>
+            </div>
+            <div class="cmd-landing-card">
+              <div class="cmd-icon">🔨</div>
+              <div class="cmd-name">/strikes [user]</div>
+              <div class="cmd-desc">Check a user's current violation strike count</div>
+              <div class="cmd-access">Mod+</div>
+            </div>
+            <div class="cmd-landing-card">
+              <div class="cmd-icon">🔄</div>
+              <div class="cmd-name">/reset [user]</div>
+              <div class="cmd-desc">Reset a user's strikes to give them a clean slate</div>
+              <div class="cmd-access">Admin+</div>
+            </div>
+            <div class="cmd-landing-card">
+              <div class="cmd-icon">⚙️</div>
+              <div class="cmd-name">/manage [action]</div>
+              <div class="cmd-desc">Add/remove bad words, manage whitelist and ignored channels</div>
+              <div class="cmd-access">Admin+</div>
+            </div>
+            <div class="cmd-landing-card">
+              <div class="cmd-icon">🔧</div>
+              <div class="cmd-name">/settings [type] [value]</div>
+              <div class="cmd-desc">View or update bot configuration and moderation parameters</div>
+              <div class="cmd-access">Owner Only</div>
+            </div>
           </div>
-          <div class="commands-grid" id="commandsGrid"></div>
         </div>
       </main>
     </div>
-    <div class="modal-overlay hidden" id="modalOverlay">
-      <div class="modal" id="modalContent">
-        <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" id="modalClose">✕</button></div>
-        <div class="modal-body" id="modalBody"></div>
-      </div>
-    </div>
     <div class="toast-container" id="toastContainer"></div>
-    <script src="../particles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+    <script src="../three-init.js"></script>
     <script src="../app.js"></script>
   </body>
 </html>

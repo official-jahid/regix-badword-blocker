@@ -1,11 +1,11 @@
 [
   {
-    "id": "admin-root-ae99b1",
+    "id": "admin-root-b9f803",
     "username": "admin",
-    "password": "$2a$12$Ojxo3dOkqoq4AXfeLB0QBenK1vC3FpFRrKi4I7LajS7GHC8ywuHPG",
+    "password": "$2a$12$uXBM4K7//ScwTNK/Sw.xFebtA9ZyGIUpvFDZGQJluGV.20d3Rt6Fq",
     "role": "owner",
-    "created": "2026-07-17T18:32:02.531Z",
-    "lastLogin": "2026-07-17T20:13:32.742Z",
+    "created": "2026-07-18T09:35:23.424Z",
+    "lastLogin": "2026-07-18T10:34:37.643Z",
     "avatar": "👑"
   }
 ]

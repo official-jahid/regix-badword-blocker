@@ -1,48 +1,24 @@
+# Dependencies
 node_modules/
-bun.lock
-bun.lockb
 
+# Build outputs
 dist/
 build/
 
+# Environment files
 .env
 .env.local
-.env.*.local
 
-logs/
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
 
+# IDE
 .vscode/
 .idea/
-
-*.tsbuildinfo
-
-src/
-scripts/
-
-.git/
-.gitignore
-
-coverage/
-.nyc_output/
-
-yarn.lock
-pnpm-lock.yaml
-
-README.md
-LICENSE
-
-/tsconfig.json
-/bun.lock
-/bun.lockb
-/.env.example
-/LICENSE
-/README.md
-
-public/package-lock.json
-public/bun.lock
-public/pages/
-public/node_modules/
-public/package.json
-
-task_checklist.md
+*.swp
+*.swo
