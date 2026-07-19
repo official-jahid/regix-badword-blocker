@@ -1,4 +1,8 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import {
+  ApplicationCommandOptionType,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 import { getStrikes, loadBotConfig } from "../services/storage";
 import type { HybridCommand } from "../types";
 
@@ -24,7 +28,7 @@ const command: HybridCommand = {
     if (!userId) {
       await reply({
         content: "❌ Please provide a valid user mention or ID.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -33,15 +37,15 @@ const command: HybridCommand = {
     const bc = await loadBotConfig();
 
     const embed = new EmbedBuilder()
-      .setTitle(bc.strikeTitle || "📊 REGIX Strike Check")
+      .setTitle(bc.strikeTitle || "📊 **REGIX Strike Check**")
       .setDescription(
         [
-          `**User:** <@${userId}>`,
-          `**User ID:** \`${userId}\``,
-          `**Strikes:** ${strikes}/${bc.maxStrikes}`,
+          `**👤 User:** <@${userId}>`,
+          `**🆔 User ID:** \`${userId}\``,
+          `**🔨 Strikes:** ${strikes}/${bc.maxStrikes}`,
           strikes >= bc.maxStrikes ?
-            "🔴 This user has been **banned**."
-          : `🟢 ${bc.maxStrikes - strikes} strike${bc.maxStrikes - strikes !== 1 ? "s" : ""} remaining.`,
+            "🔴 **This user has been banned.**"
+          : `🟢 **${bc.maxStrikes - strikes}** strike${bc.maxStrikes - strikes !== 1 ? "s" : ""} remaining.`,
         ].join("\n"),
       )
       .setColor(
@@ -54,7 +58,7 @@ const command: HybridCommand = {
     if (bc.strikeThumbnail) embed.setThumbnail(bc.strikeThumbnail);
     if (bc.strikeImage) embed.setImage(bc.strikeImage);
 
-    await reply({ embeds: [embed], ephemeral: true });
+    await reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };
 

@@ -1,28 +1,27 @@
 /**
- * REGIX Auth System — API Key Utility
- * =====================================
- * Provides API key generation, hashing (argon2), and verification.
+ * REGIX Auth System — API Key Utility (JSON Storage)
+ * ===================================================
+ * Provides API key generation, hashing (SHA-256), and verification.
  * Keys are prefixed with "rgx_" for easy identification.
+ * Uses Bun's built-in crypto for hashing — no argon2 dependency needed.
  */
 
-import * as argon2 from "argon2";
 import { randomBytes } from "crypto";
-import prisma from "./prisma";
+import { loadApiKeys, saveApiKeys, type StoredApiKey } from "./jsonDb";
 
 const KEY_PREFIX = "rgx_";
-const KEY_BYTES = 32; // 256-bit keys
-const KEY_PREFIX_LENGTH = 8; // First 8 chars of the full key for identification
+const KEY_BYTES = 32;
+const KEY_PREFIX_LENGTH = 8;
 
 export interface ApiKeyResult {
   success: boolean;
-  key?: string; // Full API key (only returned on creation)
-  keyPrefix?: string; // First 8 chars for identification
+  key?: string;
+  keyPrefix?: string;
   error?: string;
 }
 
 /**
  * Generate a cryptographically secure API key
- * Returns the full key (to show once) and the prefix (for storage)
  */
 export function generateApiKey(): { fullKey: string; prefix: string } {
   const random = randomBytes(KEY_BYTES).toString("hex");
@@ -32,15 +31,15 @@ export function generateApiKey(): { fullKey: string; prefix: string } {
 }
 
 /**
- * Hash an API key using argon2id
+ * Hash an API key using SHA-256 via Bun's built-in crypto
  */
 export async function hashApiKey(key: string): Promise<string> {
-  return argon2.hash(key, {
-    type: argon2.argon2id,
-    memoryCost: 19456,
-    timeCost: 2,
-    parallelism: 1,
-  });
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(key),
+  );
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -50,16 +49,12 @@ export async function verifyApiKey(
   key: string,
   hash: string,
 ): Promise<boolean> {
-  try {
-    return await argon2.verify(hash, key);
-  } catch {
-    return false;
-  }
+  const computedHash = await hashApiKey(key);
+  return computedHash === hash;
 }
 
 /**
- * Create a new API key in the database
- * Returns the full key only once
+ * Create a new API key
  */
 export async function createApiKey(params: {
   name: string;
@@ -75,28 +70,31 @@ export async function createApiKey(params: {
   try {
     const { fullKey, prefix } = generateApiKey();
     const keyHash = await hashApiKey(fullKey);
+    const keys = await loadApiKeys();
 
-    await prisma.apiKey.create({
-      data: {
-        keyPrefix: prefix,
-        keyHash,
-        name: params.name,
-        description: params.description ?? null,
-        ownerId: params.ownerId,
-        guildId: params.guildId ?? null,
-        rateLimit: params.rateLimit ?? 60,
-        rateLimitWindow: params.rateLimitWindow ?? 60000,
-        ipWhitelist: params.ipWhitelist ?? "",
-        permissions: params.permissions ?? "read",
-        expiresAt: params.expiresAt ?? null,
-      },
-    });
-
-    return {
-      success: true,
-      key: fullKey,
+    const newKey: StoredApiKey = {
+      id: `key_${Date.now()}_${randomBytes(4).toString("hex")}`,
       keyPrefix: prefix,
+      keyHash,
+      name: params.name,
+      description: params.description ?? null,
+      ownerId: params.ownerId,
+      guildId: params.guildId ?? null,
+      rateLimit: params.rateLimit ?? 60,
+      rateLimitWindow: params.rateLimitWindow ?? 60000,
+      ipWhitelist: params.ipWhitelist ?? "",
+      permissions: params.permissions ?? "read",
+      isActive: true,
+      lastUsedAt: null,
+      expiresAt: params.expiresAt?.toISOString() ?? null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
+
+    keys.push(newKey);
+    await saveApiKeys(keys);
+
+    return { success: true, key: fullKey, keyPrefix: prefix };
   } catch (error) {
     console.error("[APIKey] Creation error:", error);
     return { success: false, error: "Failed to create API key" };
@@ -104,7 +102,7 @@ export async function createApiKey(params: {
 }
 
 /**
- * Validate an API key: check existence, active status, expiry, and hash match
+ * Validate an API key
  */
 export async function validateApiKey(
   key: string,
@@ -123,20 +121,16 @@ export async function validateApiKey(
   error?: string;
 }> {
   try {
-    // Extract prefix from key
     const prefix = key.slice(0, KEY_PREFIX_LENGTH);
-
-    // Find by prefix
-    const apiKey = await prisma.apiKey.findFirst({
-      where: { keyPrefix: prefix, isActive: true },
-    });
+    const keys = await loadApiKeys();
+    const apiKey = keys.find((k) => k.keyPrefix === prefix && k.isActive);
 
     if (!apiKey) {
       return { valid: false, error: "API key not found" };
     }
 
     // Check expiry
-    if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+    if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
       return { valid: false, error: "API key has expired" };
     }
 
@@ -146,7 +140,7 @@ export async function validateApiKey(
       return { valid: false, error: "Invalid API key" };
     }
 
-    // Check IP whitelist if configured
+    // Check IP whitelist
     if (apiKey.ipWhitelist && ip) {
       const whitelistedIps = apiKey.ipWhitelist
         .split(",")
@@ -158,10 +152,9 @@ export async function validateApiKey(
     }
 
     // Update last used timestamp
-    await prisma.apiKey.update({
-      where: { id: apiKey.id },
-      data: { lastUsedAt: new Date() },
-    });
+    apiKey.lastUsedAt = new Date().toISOString();
+    apiKey.updatedAt = new Date().toISOString();
+    await saveApiKeys(keys);
 
     return {
       valid: true,
@@ -182,14 +175,16 @@ export async function validateApiKey(
 }
 
 /**
- * Revoke an API key by setting it inactive
+ * Revoke an API key
  */
 export async function revokeApiKey(keyId: string): Promise<boolean> {
   try {
-    await prisma.apiKey.update({
-      where: { id: keyId },
-      data: { isActive: false },
-    });
+    const keys = await loadApiKeys();
+    const key = keys.find((k) => k.id === keyId);
+    if (!key) return false;
+    key.isActive = false;
+    key.updatedAt = new Date().toISOString();
+    await saveApiKeys(keys);
     return true;
   } catch (error) {
     console.error("[APIKey] Revocation error:", error);
@@ -202,26 +197,26 @@ export async function revokeApiKey(keyId: string): Promise<boolean> {
  */
 export async function listApiKeys(ownerId: string) {
   try {
-    return await prisma.apiKey.findMany({
-      where: { ownerId },
-      select: {
-        id: true,
-        keyPrefix: true,
-        name: true,
-        description: true,
-        ownerId: true,
-        guildId: true,
-        rateLimit: true,
-        rateLimitWindow: true,
-        ipWhitelist: true,
-        permissions: true,
-        isActive: true,
-        lastUsedAt: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const keys = await loadApiKeys();
+    return keys
+      .filter((k) => k.ownerId === ownerId)
+      .map((k) => ({
+        id: k.id,
+        keyPrefix: k.keyPrefix,
+        name: k.name,
+        description: k.description,
+        ownerId: k.ownerId,
+        guildId: k.guildId,
+        rateLimit: k.rateLimit,
+        rateLimitWindow: k.rateLimitWindow,
+        ipWhitelist: k.ipWhitelist,
+        permissions: k.permissions,
+        isActive: k.isActive,
+        lastUsedAt: k.lastUsedAt ? new Date(k.lastUsedAt) : null,
+        expiresAt: k.expiresAt ? new Date(k.expiresAt) : null,
+        createdAt: new Date(k.createdAt),
+      }))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
     console.error("[APIKey] List error:", error);
     return [];

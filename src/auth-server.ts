@@ -9,8 +9,8 @@
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
 import { validateApiKey } from "./lib/apiKey";
+import { initJsonDb, loadApiKeys } from "./lib/jsonDb";
 import { verifyToken } from "./lib/jwt";
-import prisma, { initPrisma } from "./lib/prisma";
 import { checkRateLimit, logAudit } from "./lib/tokenService";
 
 const app = express();
@@ -257,30 +257,16 @@ app.get("/keys/:prefix", async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = await prisma.apiKey.findFirst({
-      where: { keyPrefix: prefix },
-      select: {
-        id: true,
-        keyPrefix: true,
-        name: true,
-        description: true,
-        ownerId: true,
-        guildId: true,
-        rateLimit: true,
-        rateLimitWindow: true,
-        ipWhitelist: true,
-        permissions: true,
-        isActive: true,
-        lastUsedAt: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-    });
+    const keys = await loadApiKeys();
+    const apiKey = keys.find((k) => k.keyPrefix === prefix);
 
     if (!apiKey) {
       res.status(404).json({ error: "API key not found" });
       return;
     }
+
+    // Remove sensitive fields
+    const { keyHash, ...safeKey } = apiKey;
 
     await logAudit({
       action: "api_key.info_viewed",
@@ -289,7 +275,7 @@ app.get("/keys/:prefix", async (req: Request, res: Response) => {
       ip: (req.headers["x-forwarded-for"] as string) || req.ip || "unknown",
     });
 
-    res.json({ key: apiKey });
+    res.json({ key: safeKey });
   } catch (error) {
     console.error("[AuthServer] Get key error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -335,9 +321,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 async function startServer() {
   try {
-    // Initialize Prisma connection
-    await initPrisma();
-    console.log("[AuthServer] Connected to database");
+    // Initialize JSON database
+    await initJsonDb();
+    console.log("[AuthServer] Auth data store ready");
 
     app.listen(PORT, () => {
       console.log(`🔐 REGIX Auth Validation Server running on port ${PORT}`);

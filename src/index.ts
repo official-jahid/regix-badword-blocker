@@ -1,11 +1,18 @@
-import { Client, Events, GatewayIntentBits, Partials } from "discord.js";
+import {
+  Client,
+  EmbedBuilder,
+  Events,
+  GatewayIntentBits,
+  MessageFlags,
+  Partials,
+} from "discord.js";
 import {
   deploySlashCommands,
   handlePrefixCommand,
   handleSlashCommand,
   registerCommands,
 } from "./handlers/commandHandler";
-import { initPrisma } from "./lib/prisma";
+import { initJsonDb } from "./lib/jsonDb";
 import { runPipeline } from "./services/moderation";
 import { applyPenalty, getFlagReason } from "./services/penalties";
 import { buildTermsEmbed, isCommandAuthorized } from "./services/permissions";
@@ -63,15 +70,12 @@ registerCommands([
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`💀 REGIX GOD MODE v2.0 READY — ${readyClient.user.tag}`);
 
-  // Initialize Prisma database connection
+  // Initialize JSON database for auth
   try {
-    await initPrisma();
-    console.log("[Bot] Prisma connected — auth system ready");
+    await initJsonDb();
+    console.log("[Bot] Auth data store ready");
   } catch (err) {
-    console.error("[Bot] Failed to initialize Prisma:", err);
-    console.log(
-      "[Bot] Continuing without database — auth commands will be unavailable",
-    );
+    console.error("[Bot] Failed to initialize auth data store:", err);
   }
 
   await deploySlashCommands(config);
@@ -111,23 +115,61 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
+// ─── Button Interaction Handler ──────────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  if (interaction.inGuild() && interaction.member) {
-    const authorized = isCommandAuthorized(interaction.member as any, config);
-    if (!authorized) {
+  if (interaction.isChatInputCommand()) {
+    if (interaction.inGuild() && interaction.member) {
+      const authorized = isCommandAuthorized(interaction.member as any, config);
+      if (!authorized) {
+        await interaction.reply({
+          content: "❌ You are not authorized.",
+          flags: MessageFlags.Ephemeral,
+        });
+        try {
+          const termsEmbed = await buildTermsEmbed();
+          await (interaction.user as any).send({ embeds: [termsEmbed] });
+        } catch {}
+        return;
+      }
+    }
+    await handleSlashCommand(interaction, config);
+    return;
+  }
+
+  // Handle button interactions
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+
+    // Help command buttons
+    if (customId.startsWith("help_")) {
+      const commandName = customId.replace("help_", "");
+      const descriptions: Record<string, string> = {
+        strikes: "**/strikes** `[user]` — Check a user's strike count (Mod+)",
+        reset: "**/reset** `[user]` — Reset a user's strikes (Admin+)",
+        manage:
+          "**/manage** `ignore|whitelist|blacklist` — Manage moderation lists (Admin+)",
+        settings:
+          "**/settings** `view|timeout|max-strikes|...` — Configure bot settings (Owner)",
+        auth: "**/auth** `generate|reset|get|customize` — Manage API keys & JWT (Admin+)",
+      };
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🔍 Command: ${commandName}`)
+        .setDescription(
+          descriptions[commandName] || `Quick access to **/${commandName}**`,
+        )
+        .setColor("Blue")
+        .setFooter({
+          text: "REGIX Studio • GOD MODE • Use /help for full menu",
+        })
+        .setTimestamp();
+
       await interaction.reply({
-        content: "❌ You are not authorized.",
-        ephemeral: true,
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral,
       });
-      try {
-        const termsEmbed = await buildTermsEmbed();
-        await (interaction.user as any).send({ embeds: [termsEmbed] });
-      } catch {}
-      return;
     }
   }
-  await handleSlashCommand(interaction, config);
 });
 
 process.on("unhandledRejection", (reason) =>

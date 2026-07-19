@@ -1,15 +1,15 @@
 /**
- * REGIX Auth System — JWT Utility
- * ================================
+ * REGIX Auth System — JWT Utility (JSON Storage)
+ * ================================================
  * Provides JWT generation and verification using guild-specific configs
- * stored in the database.
+ * stored in JSON files.
  */
 
 import jwt from "jsonwebtoken";
-import prisma from "./prisma";
+import { loadJwtConfigs } from "./jsonDb";
 
 export interface JwtPayload {
-  sub: string; // Discord user ID
+  sub: string;
   guildId: string;
   permissions: string;
   iat?: number;
@@ -34,9 +34,8 @@ export async function generateToken(
   permissions: string = "read",
 ): Promise<JwtResult> {
   try {
-    const config = await prisma.jwtConfig.findUnique({
-      where: { guildId },
-    });
+    const configs = await loadJwtConfigs();
+    const config = configs.find((c) => c.guildId === guildId);
 
     if (!config || !config.isActive) {
       return {
@@ -77,9 +76,8 @@ export async function verifyToken(
   guildId: string,
 ): Promise<JwtResult> {
   try {
-    const config = await prisma.jwtConfig.findUnique({
-      where: { guildId },
-    });
+    const configs = await loadJwtConfigs();
+    const config = configs.find((c) => c.guildId === guildId);
 
     if (!config || !config.isActive) {
       return {
@@ -107,7 +105,7 @@ export async function verifyToken(
 }
 
 /**
- * Decode a JWT without verification (for reading header/payload)
+ * Decode a JWT without verification
  */
 export function decodeToken(token: string): JwtPayload | null {
   try {

@@ -1,6 +1,7 @@
 import {
   ApplicationCommandOptionType,
   EmbedBuilder,
+  MessageFlags,
   PermissionFlagsBits,
 } from "discord.js";
 import { getStrikes, loadBotConfig, resetStrikes } from "../services/storage";
@@ -29,7 +30,7 @@ const command: HybridCommand = {
     if (!userId) {
       await reply({
         content: "❌ Please provide a valid user mention or ID.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -38,7 +39,7 @@ const command: HybridCommand = {
     if (previousStrikes === 0) {
       await reply({
         content: `ℹ️ <@${userId}> has no strikes to reset.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -47,13 +48,13 @@ const command: HybridCommand = {
     const bc = await loadBotConfig();
 
     const embed = new EmbedBuilder()
-      .setTitle(bc.resetTitle || "✅ Strikes Reset")
+      .setTitle(bc.resetTitle || "✅ **Strikes Reset**")
       .setDescription(
         [
-          `**User:** <@${userId}>`,
-          `**User ID:** \`${userId}\``,
-          `**Previous Strikes:** ${previousStrikes}/${bc.maxStrikes}`,
-          `**Current Strikes:** 0/${bc.maxStrikes} ✅`,
+          `**👤 User:** <@${userId}>`,
+          `**🆔 User ID:** \`${userId}\``,
+          `**📊 Previous Strikes:** ${previousStrikes}/${bc.maxStrikes}`,
+          `**✅ Current Strikes:** 0/${bc.maxStrikes} — **Cleared!**`,
         ].join("\n"),
       )
       .setColor("Green")
@@ -62,7 +63,7 @@ const command: HybridCommand = {
     if (bc.resetThumbnail) embed.setThumbnail(bc.resetThumbnail);
     if (bc.resetImage) embed.setImage(bc.resetImage);
 
-    await reply({ embeds: [embed], ephemeral: true });
+    await reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };
 

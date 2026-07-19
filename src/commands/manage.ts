@@ -8,6 +8,7 @@
 import {
   ApplicationCommandOptionType,
   EmbedBuilder,
+  MessageFlags,
   PermissionFlagsBits,
 } from "discord.js";
 import {
@@ -155,7 +156,7 @@ const command: HybridCommand = {
         if (perms.ignoredChannels.includes(channel.id)) {
           await reply({
             content: "ℹ️ That channel is already ignored.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -163,7 +164,7 @@ const command: HybridCommand = {
         await savePermissions(perms);
         await reply({
           content: `✅ <#${channel.id}> is now ignored by moderation.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "remove") {
         const channel = interaction.options.getChannel("channel", true);
@@ -173,13 +174,13 @@ const command: HybridCommand = {
         await savePermissions(perms);
         await reply({
           content: `✅ <#${channel.id}> is no longer ignored.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "list") {
         if (perms.ignoredChannels.length === 0) {
           await reply({
             content: "ℹ️ No channels are currently ignored.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -187,12 +188,12 @@ const command: HybridCommand = {
         await reply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("Ignored Channels")
+              .setTitle("🔇 **Ignored Channels**")
               .setDescription(list)
               .setColor("Blue")
               .setFooter({ text: "REGIX Studio • GOD MODE" }),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
       return;
@@ -210,7 +211,7 @@ const command: HybridCommand = {
         if (words.whiteListWords.includes(word)) {
           await reply({
             content: `ℹ️ \`${word}\` is already whitelisted.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -218,7 +219,7 @@ const command: HybridCommand = {
         await saveWords(words);
         await reply({
           content: `✅ \`${word}\` has been added to the whitelist.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "remove") {
         const word = interaction.options
@@ -229,13 +230,13 @@ const command: HybridCommand = {
         await saveWords(words);
         await reply({
           content: `✅ \`${word}\` has been removed from the whitelist.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "list") {
         if (words.whiteListWords.length === 0) {
           await reply({
             content: "ℹ️ No words are currently whitelisted.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -243,12 +244,12 @@ const command: HybridCommand = {
         await reply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("Whitelisted Words")
+              .setTitle("✅ **Whitelisted Words**")
               .setDescription(list)
               .setColor("Green")
               .setFooter({ text: "REGIX Studio • GOD MODE" }),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
       return;
@@ -266,7 +267,7 @@ const command: HybridCommand = {
         if (words.badWords.includes(word)) {
           await reply({
             content: `ℹ️ \`${word}\` is already in the blacklist.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -274,7 +275,7 @@ const command: HybridCommand = {
         await saveWords(words);
         await reply({
           content: `✅ \`${word}\` has been added to the blacklist.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "remove") {
         const word = interaction.options
@@ -285,15 +286,15 @@ const command: HybridCommand = {
         await saveWords(words);
         await reply({
           content: `✅ \`${word}\` has been removed from the blacklist.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else if (subcommand === "list") {
         const total = words.badWords.length;
-        const sample = words.badWords.slice(0, 50); // show first 50
+        const sample = words.badWords.slice(0, 50);
         if (sample.length === 0) {
           await reply({
             content: "ℹ️ No bad words configured.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -302,19 +303,22 @@ const command: HybridCommand = {
           embeds: [
             new EmbedBuilder()
               .setTitle(
-                `Bad Words (${total} total${total > 50 ? `, showing first 50` : ""})`,
+                `🚫 **Bad Words** (${total} total${total > 50 ? `, showing first 50` : ""})`,
               )
               .setDescription(list)
               .setColor("Red")
               .setFooter({ text: "REGIX Studio • GOD MODE" }),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
       return;
     }
 
-    await reply({ content: "❌ Unknown subcommand.", ephemeral: true });
+    await reply({
+      content: "❌ Unknown subcommand.",
+      flags: MessageFlags.Ephemeral,
+    });
   },
 };
 

@@ -9,7 +9,13 @@
  * On interaction: routes slash interactions to the same handlers.
  */
 
-import { type Message, Collection, REST, Routes } from "discord.js";
+import {
+  type Message,
+  Collection,
+  MessageFlags,
+  REST,
+  Routes,
+} from "discord.js";
 import type { BotConfig, CommandContext, HybridCommand } from "../types";
 
 /* ─── Internal Registry ──────────────────────────────────────────────────── */
@@ -122,7 +128,7 @@ export async function handleSlashCommand(
     if (perms && !perms.has(command.defaultMemberPermissions)) {
       await interaction.reply({
         content: "❌ You do not have permission to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -140,18 +146,17 @@ export async function handleSlashCommand(
     config,
     args,
     reply: async (opts) => {
+      const replyOptions: any = {
+        content: opts.content,
+        embeds: opts.embeds,
+        components: opts.components,
+        flags:
+          opts.flags ?? (opts.ephemeral ? MessageFlags.Ephemeral : undefined),
+      };
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: opts.content,
-          embeds: opts.embeds,
-          ephemeral: opts.ephemeral ?? false,
-        });
+        await interaction.followUp(replyOptions);
       } else {
-        await interaction.reply({
-          content: opts.content,
-          embeds: opts.embeds,
-          ephemeral: opts.ephemeral ?? false,
-        });
+        await interaction.reply(replyOptions);
       }
     },
   };
@@ -163,7 +168,7 @@ export async function handleSlashCommand(
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: "❌ An error occurred while executing that command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

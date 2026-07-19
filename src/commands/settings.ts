@@ -1,6 +1,7 @@
 import {
   ApplicationCommandOptionType,
   EmbedBuilder,
+  MessageFlags,
   PermissionFlagsBits,
 } from "discord.js";
 import { loadBotConfig, saveBotConfig } from "../services/storage";
@@ -337,27 +338,30 @@ const command: HybridCommand = {
 
     const save = async () => {
       await saveBotConfig(bc);
-      await reply({ content: "✅ Setting updated.", ephemeral: true });
+      await reply({
+        content: "✅ Setting updated.",
+        flags: MessageFlags.Ephemeral,
+      });
     };
 
     if (!subG) {
       if (sub === "view") {
         const embed = new EmbedBuilder()
-          .setTitle("⚙️ REGIX Bot Settings")
+          .setTitle("⚙️ **REGIX Bot Settings**")
           .setColor("Blue")
           .addFields(
             {
-              name: "⏱ Timeout Duration",
+              name: "⏱ **Timeout Duration**",
               value: `${bc.timeoutDurationMs / 60000} min(s)`,
               inline: true,
             },
             {
-              name: "🔢 Max Strikes",
+              name: "🔢 **Max Strikes**",
               value: String(bc.maxStrikes),
               inline: true,
             },
             {
-              name: "🔔 Notification Channel",
+              name: "🔔 **Notification Channel**",
               value:
                 bc.notificationChannelId ?
                   `<#${bc.notificationChannelId}>`
@@ -365,89 +369,89 @@ const command: HybridCommand = {
               inline: true,
             },
             {
-              name: "📝 Log Channel",
+              name: "📝 **Log Channel**",
               value: bc.logChannelId ? `<#${bc.logChannelId}>` : "Not set",
               inline: true,
             },
             {
-              name: "🚨 DM Warning Title",
+              name: "🚨 **DM Warning Title**",
               value: bc.dmWarningTitle || "Default",
               inline: true,
             },
             {
-              name: "🖼 DM Warning Thumb",
+              name: "🖼 **DM Warning Thumb**",
               value: bc.dmWarningThumbnail ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "🖼 DM Warning Image",
+              name: "🖼 **DM Warning Image**",
               value: bc.dmWarningImage ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "📝 Log Embed Title",
+              name: "📝 **Log Embed Title**",
               value: bc.logTitle || "Default",
               inline: true,
             },
             {
-              name: "🖼 Log Thumb",
+              name: "🖼 **Log Thumb**",
               value: bc.logThumbnail ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "🖼 Log Image",
+              name: "🖼 **Log Image**",
               value: bc.logImage ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "📜 Terms Title",
+              name: "📜 **Terms Title**",
               value: bc.termsTitle || "Default",
               inline: true,
             },
             {
-              name: "🖼 Terms Thumb",
+              name: "🖼 **Terms Thumb**",
               value: bc.termsThumbnail ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "🖼 Terms Image",
+              name: "🖼 **Terms Image**",
               value: bc.termsImage ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "📊 Strike Title",
+              name: "📊 **Strike Title**",
               value: bc.strikeTitle || "Default",
               inline: true,
             },
             {
-              name: "🖼 Strike Thumb",
+              name: "🖼 **Strike Thumb**",
               value: bc.strikeThumbnail ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "🖼 Strike Image",
+              name: "🖼 **Strike Image**",
               value: bc.strikeImage ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "✅ Reset Title",
+              name: "✅ **Reset Title**",
               value: bc.resetTitle || "Default",
               inline: true,
             },
             {
-              name: "🖼 Reset Thumb",
+              name: "🖼 **Reset Thumb**",
               value: bc.resetThumbnail ? "✅ Set" : "❌ Not set",
               inline: true,
             },
             {
-              name: "🖼 Reset Image",
+              name: "🖼 **Reset Image**",
               value: bc.resetImage ? "✅ Set" : "❌ Not set",
               inline: true,
             },
           )
           .setFooter({ text: "REGIX Studio • GOD MODE" })
           .setTimestamp();
-        await reply({ embeds: [embed], ephemeral: true });
+        await reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
       }
       if (sub === "timeout") {
@@ -572,7 +576,10 @@ const command: HybridCommand = {
       }
     }
 
-    await reply({ content: "❌ Unknown setting.", ephemeral: true });
+    await reply({
+      content: "❌ Unknown setting.",
+      flags: MessageFlags.Ephemeral,
+    });
   },
 };
 

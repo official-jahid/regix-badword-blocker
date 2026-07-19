@@ -60,6 +60,8 @@ export interface CommandContext {
   reply: (options: {
     content?: string;
     embeds?: any[];
+    components?: any[];
+    flags?: number;
     ephemeral?: boolean;
   }) => Promise<void>;
 }

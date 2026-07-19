@@ -1,0 +1,29 @@
+[
+  {
+    "id": "audit_1784487182767_4d87c8c8",
+    "action": "auth.generate",
+    "actorId": "1076183559796183242",
+    "targetId": "rgx_61cb",
+    "details": "{\"name\":\"jahid\",\"scopes\":\"admin\",\"expiresIn\":\"7d\"}",
+    "ip": "discord",
+    "timestamp": "2026-07-19T18:53:02.767Z"
+  },
+  {
+    "id": "audit_1784487815076_d25e3678",
+    "action": "auth.generate",
+    "actorId": "1076183559796183242",
+    "targetId": "rgx_553c",
+    "details": "{\"name\":\"asifa\",\"scopes\":\"read\",\"expiresIn\":\"7d\",\"language\":\"TypeScript (Node.js / Bun)\"}",
+    "ip": "discord",
+    "timestamp": "2026-07-19T19:03:35.076Z"
+  },
+  {
+    "id": "audit_1784488302298_1d049185",
+    "action": "auth.generate",
+    "actorId": "1076183559796183242",
+    "targetId": "rgx_2e8c",
+    "details": "{\"name\":\"abxc\",\"scopes\":\"read\",\"expiresIn\":\"lifetime\",\"languages\":[\"python\"]}",
+    "ip": "discord",
+    "timestamp": "2026-07-19T19:11:42.298Z"
+  }
+]

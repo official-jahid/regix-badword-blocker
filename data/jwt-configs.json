@@ -1,0 +1,15 @@
+[
+  {
+    "id": "jwt_1784487182764_f5c46f42",
+    "guildId": "1512484698796855397",
+    "secret": "rgx-jwt-eaed10982924a83b59e1751dd8cab39db96c941efaaa5eaaf9e8ffd2c31531f5",
+    "expiresIn": "7d",
+    "issuer": "regix-auth",
+    "audience": "1512484698796855397",
+    "rateLimit": 100,
+    "rateLimitWindow": 60000,
+    "isActive": true,
+    "createdAt": "2026-07-19T18:53:02.764Z",
+    "updatedAt": "2026-07-19T18:53:02.764Z"
+  }
+]

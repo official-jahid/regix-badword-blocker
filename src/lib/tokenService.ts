@@ -1,18 +1,31 @@
 /**
- * REGIX Auth System — Token Management Service
- * ==============================================
+ * REGIX Auth System — Token Management Service (JSON Storage)
+ * ============================================================
  * High-level service for managing API keys and JWT configs.
  * Provides CRUD operations, rate limiting, and IP whitelist management.
  */
 
+import { randomBytes } from "crypto";
 import {
   createApiKey,
   listApiKeys,
   revokeApiKey,
   validateApiKey,
 } from "./apiKey";
+import {
+  loadApiKeys,
+  loadAuditLogs,
+  loadJwtConfigs,
+  loadRateLimitLogs,
+  saveApiKeys,
+  saveAuditLogs,
+  saveJwtConfigs,
+  saveRateLimitLogs,
+  type StoredAuditLog,
+  type StoredJwtConfig,
+  type StoredRateLimitLog,
+} from "./jsonDb";
 import { generateToken, verifyToken } from "./jwt";
-import prisma from "./prisma";
 
 // ─── API Key Management ──────────────────────────────────────────────────
 
@@ -35,26 +48,25 @@ export async function updateApiKey(
   },
 ) {
   try {
-    const updateData: Record<string, unknown> = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined)
-      updateData.description = data.description;
-    if (data.rateLimit !== undefined) updateData.rateLimit = data.rateLimit;
+    const keys = await loadApiKeys();
+    const key = keys.find((k) => k.id === keyId);
+    if (!key) return { success: false, error: "API key not found" };
+
+    if (data.name !== undefined) key.name = data.name;
+    if (data.description !== undefined) key.description = data.description;
+    if (data.rateLimit !== undefined) key.rateLimit = data.rateLimit;
     if (data.rateLimitWindow !== undefined)
-      updateData.rateLimitWindow = data.rateLimitWindow;
-    if (data.ipWhitelist !== undefined)
-      updateData.ipWhitelist = data.ipWhitelist;
-    if (data.permissions !== undefined)
-      updateData.permissions = data.permissions;
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
-    if (data.expiresAt !== undefined) updateData.expiresAt = data.expiresAt;
+      key.rateLimitWindow = data.rateLimitWindow;
+    if (data.ipWhitelist !== undefined) key.ipWhitelist = data.ipWhitelist;
+    if (data.permissions !== undefined) key.permissions = data.permissions;
+    if (data.isActive !== undefined) key.isActive = data.isActive;
+    if (data.expiresAt !== undefined)
+      key.expiresAt = data.expiresAt?.toISOString() ?? null;
 
-    const updated = await prisma.apiKey.update({
-      where: { id: keyId },
-      data: updateData,
-    });
+    key.updatedAt = new Date().toISOString();
+    await saveApiKeys(keys);
 
-    return { success: true, apiKey: updated };
+    return { success: true, apiKey: key };
   } catch (error) {
     console.error("[TokenService] Update API key error:", error);
     return { success: false, error: "Failed to update API key" };
@@ -69,7 +81,8 @@ export async function addIpToWhitelist(
   ip: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiKey = await prisma.apiKey.findUnique({ where: { id: keyId } });
+    const keys = await loadApiKeys();
+    const apiKey = keys.find((k) => k.id === keyId);
     if (!apiKey) return { success: false, error: "API key not found" };
 
     const currentIps = apiKey.ipWhitelist
@@ -82,10 +95,9 @@ export async function addIpToWhitelist(
     }
 
     currentIps.push(ip);
-    await prisma.apiKey.update({
-      where: { id: keyId },
-      data: { ipWhitelist: currentIps.join(",") },
-    });
+    apiKey.ipWhitelist = currentIps.join(",");
+    apiKey.updatedAt = new Date().toISOString();
+    await saveApiKeys(keys);
 
     return { success: true };
   } catch (error) {
@@ -102,7 +114,8 @@ export async function removeIpFromWhitelist(
   ip: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiKey = await prisma.apiKey.findUnique({ where: { id: keyId } });
+    const keys = await loadApiKeys();
+    const apiKey = keys.find((k) => k.id === keyId);
     if (!apiKey) return { success: false, error: "API key not found" };
 
     const currentIps = apiKey.ipWhitelist
@@ -116,10 +129,9 @@ export async function removeIpFromWhitelist(
       return { success: false, error: "IP not found in whitelist" };
     }
 
-    await prisma.apiKey.update({
-      where: { id: keyId },
-      data: { ipWhitelist: filtered.join(",") },
-    });
+    apiKey.ipWhitelist = filtered.join(",");
+    apiKey.updatedAt = new Date().toISOString();
+    await saveApiKeys(keys);
 
     return { success: true };
   } catch (error) {
@@ -148,20 +160,24 @@ export async function upsertJwtConfig(
   },
 ) {
   try {
-    const config = await prisma.jwtConfig.upsert({
-      where: { guildId },
-      update: {
-        secret: data.secret,
-        ...(data.expiresIn !== undefined && { expiresIn: data.expiresIn }),
-        ...(data.issuer !== undefined && { issuer: data.issuer }),
-        ...(data.audience !== undefined && { audience: data.audience }),
-        ...(data.rateLimit !== undefined && { rateLimit: data.rateLimit }),
-        ...(data.rateLimitWindow !== undefined && {
-          rateLimitWindow: data.rateLimitWindow,
-        }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
-      },
-      create: {
+    const configs = await loadJwtConfigs();
+    const existingIndex = configs.findIndex((c) => c.guildId === guildId);
+
+    if (existingIndex >= 0) {
+      const config = configs[existingIndex];
+      config.secret = data.secret;
+      if (data.expiresIn !== undefined) config.expiresIn = data.expiresIn;
+      if (data.issuer !== undefined) config.issuer = data.issuer;
+      if (data.audience !== undefined) config.audience = data.audience;
+      if (data.rateLimit !== undefined) config.rateLimit = data.rateLimit;
+      if (data.rateLimitWindow !== undefined)
+        config.rateLimitWindow = data.rateLimitWindow;
+      if (data.isActive !== undefined) config.isActive = data.isActive;
+      config.updatedAt = new Date().toISOString();
+      configs[existingIndex] = config;
+    } else {
+      const newConfig: StoredJwtConfig = {
+        id: `jwt_${Date.now()}_${randomBytes(4).toString("hex")}`,
         guildId,
         secret: data.secret,
         expiresIn: data.expiresIn ?? "24h",
@@ -170,10 +186,17 @@ export async function upsertJwtConfig(
         rateLimit: data.rateLimit ?? 100,
         rateLimitWindow: data.rateLimitWindow ?? 60000,
         isActive: data.isActive ?? true,
-      },
-    });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      configs.push(newConfig);
+    }
 
-    return { success: true, config };
+    await saveJwtConfigs(configs);
+    return {
+      success: true,
+      config: configs[existingIndex >= 0 ? existingIndex : configs.length - 1],
+    };
   } catch (error) {
     console.error("[TokenService] Upsert JWT config error:", error);
     return { success: false, error: "Failed to configure JWT" };
@@ -185,10 +208,14 @@ export async function upsertJwtConfig(
  */
 export async function getJwtConfig(guildId: string) {
   try {
-    const config = await prisma.jwtConfig.findUnique({
-      where: { guildId },
-    });
-    return config;
+    const configs = await loadJwtConfigs();
+    const config = configs.find((c) => c.guildId === guildId);
+    if (!config) return null;
+    return {
+      ...config,
+      createdAt: new Date(config.createdAt),
+      updatedAt: new Date(config.updatedAt),
+    };
   } catch (error) {
     console.error("[TokenService] Get JWT config error:", error);
     return null;
@@ -206,13 +233,18 @@ export async function logRateLimit(params: {
   endpoint: string;
 }) {
   try {
-    await prisma.rateLimitLog.create({
-      data: {
-        keyId: params.keyId ?? null,
-        ip: params.ip,
-        endpoint: params.endpoint,
-      },
-    });
+    const logs = await loadRateLimitLogs();
+    const log: StoredRateLimitLog = {
+      id: `rl_${Date.now()}_${randomBytes(4).toString("hex")}`,
+      keyId: params.keyId ?? null,
+      ip: params.ip,
+      endpoint: params.endpoint,
+      timestamp: new Date().toISOString(),
+    };
+    logs.push(log);
+    // Keep only last 1000 logs to prevent file bloat
+    if (logs.length > 1000) logs.splice(0, logs.length - 1000);
+    await saveRateLimitLogs(logs);
   } catch (error) {
     console.error("[TokenService] Rate limit log error:", error);
   }
@@ -231,14 +263,12 @@ export async function checkRateLimit(
   windowMs: number,
 ): Promise<{ allowed: boolean; remaining: number }> {
   try {
-    const since = new Date(Date.now() - windowMs);
-
-    const count = await prisma.rateLimitLog.count({
-      where: {
-        keyId: params.keyId,
-        timestamp: { gte: since },
-      },
-    });
+    const logs = await loadRateLimitLogs();
+    const since = Date.now() - windowMs;
+    const count = logs.filter(
+      (l) =>
+        l.keyId === params.keyId && new Date(l.timestamp).getTime() > since,
+    ).length;
 
     const remaining = Math.max(0, maxRequests - count);
 
@@ -249,7 +279,7 @@ export async function checkRateLimit(
     return { allowed: remaining > 0, remaining };
   } catch (error) {
     console.error("[TokenService] Rate limit check error:", error);
-    return { allowed: true, remaining: maxRequests }; // Fail open
+    return { allowed: true, remaining: maxRequests };
   }
 }
 
@@ -266,15 +296,20 @@ export async function logAudit(params: {
   ip?: string;
 }) {
   try {
-    await prisma.auditLog.create({
-      data: {
-        action: params.action,
-        actorId: params.actorId,
-        targetId: params.targetId ?? null,
-        details: params.details ?? null,
-        ip: params.ip ?? null,
-      },
-    });
+    const logs = await loadAuditLogs();
+    const log: StoredAuditLog = {
+      id: `audit_${Date.now()}_${randomBytes(4).toString("hex")}`,
+      action: params.action,
+      actorId: params.actorId,
+      targetId: params.targetId ?? null,
+      details: params.details ?? null,
+      ip: params.ip ?? null,
+      timestamp: new Date().toISOString(),
+    };
+    logs.push(log);
+    // Keep only last 500 audit logs
+    if (logs.length > 500) logs.splice(0, logs.length - 500);
+    await saveAuditLogs(logs);
   } catch (error) {
     console.error("[TokenService] Audit log error:", error);
   }
@@ -290,21 +325,27 @@ export async function getAuditLogs(params: {
   offset?: number;
 }) {
   try {
-    const where: Record<string, unknown> = {};
-    if (params.actorId) where.actorId = params.actorId;
-    if (params.action) where.action = params.action;
+    let logs = await loadAuditLogs();
 
-    const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        where,
-        orderBy: { timestamp: "desc" },
-        take: params.limit ?? 50,
-        skip: params.offset ?? 0,
-      }),
-      prisma.auditLog.count({ where }),
-    ]);
+    if (params.actorId) {
+      logs = logs.filter((l) => l.actorId === params.actorId);
+    }
+    if (params.action) {
+      logs = logs.filter((l) => l.action === params.action);
+    }
 
-    return { logs, total };
+    // Sort by timestamp descending
+    logs.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+
+    const total = logs.length;
+    const offset = params.offset ?? 0;
+    const limit = params.limit ?? 50;
+    const paginated = logs.slice(offset, offset + limit);
+
+    return { logs: paginated, total };
   } catch (error) {
     console.error("[TokenService] Get audit logs error:", error);
     return { logs: [], total: 0 };
