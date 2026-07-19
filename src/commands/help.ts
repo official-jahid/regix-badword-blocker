@@ -166,37 +166,31 @@ const command: HybridCommand = {
         {
           name: "━━━ 🔐 Auth System (⚙️ Admin+) ━━━",
           value:
-            " Manage API keys and JWT authentication for external service integration",
+            " Manage API keys, JWT tokens, and authentication for external service integration. All responses containing tokens are **ephemeral** (only you can see them).",
           inline: false,
         },
         {
-          name: "🔹 /auth generate [name] [description] [permissions] [rate-limit]",
+          name: "🔹 /auth generate [name] [expires-in] [scopes]",
           value:
-            "Generate a new API key for external service authentication. **The key is shown only once!** You can set name, optional description, permissions (read/write/admin), and rate limit (requests per minute, default 60).",
+            "Generate a **Secret API Key** (long-lived, for native apps) and a **JWT** (short-lived, for web sessions). **Both shown only once!** Set name (required), optional expiration (e.g., 24h, 7d, 30m), and scopes (read/write/admin, comma-separated).",
           inline: false,
         },
         {
-          name: "🔹 /auth reset [key-id]",
+          name: "🔹 /auth reset",
           value:
-            "Revoke an API key by its ID. The key will be deactivated and can no longer be used for authentication.",
+            "Revoke ALL your current API keys and JWTs, immediately invalidating them in the database. Issues a fresh set of credentials automatically.",
           inline: false,
         },
         {
-          name: "🔹 /auth get [key-id]",
+          name: "🔹 /auth get",
           value:
-            "List all your API keys with their status (active/revoked). Use optional key-id parameter to view detailed info on a specific key including permissions, rate limit, IP whitelist, and last usage time.",
+            "Securely display all your active API keys, JWT configuration, rate limits, IP whitelist, and remaining validity. Shows creation time, last usage, and expiry status.",
           inline: false,
         },
         {
-          name: "🔹 /auth customize jwt [secret] [expires-in] [issuer] [audience]",
+          name: "🔹 /auth customize [rate-limit] [ip-whitelist]",
           value:
-            "Configure JWT signing settings for this server/guild. Set the JWT secret (min 32 characters), token expiration time (e.g., 24h, 7d, 30m), issuer claim, and optional audience claim. Existing values are preserved if left empty.",
-          inline: false,
-        },
-        {
-          name: "🔹 /auth customize view",
-          value:
-            "View the current JWT configuration for this server including active status, expiration, issuer, audience, and rate limit settings.",
+            "Customize security constraints for your tokens. Set requests-per-minute limit (1-10,000) and/or comma-separated IP whitelist (IPv4/CIDR). Leave IP whitelist empty to allow all IPs.",
           inline: false,
         },
       )

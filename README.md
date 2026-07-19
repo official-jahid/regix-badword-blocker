@@ -1,4 +1,4 @@
-# 🔥 REGIX Bad Word Blocker
+# 🔥 REGIX — Discord Bot & Central Auth System
 
 <!-- markdownlint-disable MD033 -->
 
@@ -13,8 +13,9 @@
 </p>
 
 <p align="center">
-  <strong>REGIX</strong> is a Discord moderation bot that filters inappropriate language using a hybrid approach:
-  <br><em>local word-list matching</em> ⚡ + <em>AI-powered detection via OpenRouter</em> 🧠
+  <strong>REGIX</strong> is a standalone Discord moderation bot that also serves as a secure <strong>Authentication & Token Management System</strong> for your entire application ecosystem.
+  <br><br>
+  <em>Discord Moderation</em> ⚡ + <em>AI Detection</em> 🧠 + <em>Central Auth</em> 🔐
 </p>
 
 ---
@@ -22,17 +23,48 @@
 ## 📋 Architecture
 
 ```mermaid
+sequenceDiagram
+    participant Discord as Discord Bot
+    participant Neon as Neon PostgreSQL
+    participant AuthAPI as Auth Validation API
+    participant WebApp as Web App (JS/TS)
+    participant NativeApp as Native App (C#/Python)
+
+    Note over Discord: Admin runs /auth generate
+
+    Discord->>Discord: Generate Secret API Key (rgx_...)
+    Discord->>Discord: Generate JWT (short-lived)
+    Discord->>Neon: Store hashed API key + JWT config
+    Discord-->>Discord: Show credentials (ephemeral, once)
+
+    Note over WebApp: Use JWT for web sessions
+    WebApp->>AuthAPI: POST /validate<br/>Authorization: Bearer <jwt>
+    AuthAPI->>Neon: Fetch JWT config by guildId
+    AuthAPI->>AuthAPI: Verify JWT signature + expiry
+    AuthAPI-->>WebApp: { valid: true, payload: {...} }
+
+    Note over NativeApp: Use API Key for long-lived access
+    NativeApp->>AuthAPI: POST /validate<br/>Authorization: Bearer <api_key>
+    AuthAPI->>Neon: Lookup key by prefix
+    AuthAPI->>Neon: Check rate limit + IP whitelist
+    AuthAPI->>AuthAPI: Verify argon2 hash
+    AuthAPI-->>NativeApp: { valid: true, payload: {...}, rateLimit: {...} }
+```
+
+```mermaid
 graph TB
-    subgraph Discord["Discord Bot (Bun runtime)"]
+    subgraph DISCORD["Discord Bot (Bun runtime)"]
         CMD["Commands<br/>(slash + prefix)"]
         HAND["Handlers<br/>(command router)"]
-        SVC["Services<br/>• moderation.ts<br/>• openRouter.ts (AI)<br/>• penalties.ts<br/>• permissions.ts<br/>• storage.ts (JSON)"]
+        SVC["Services<br/>• moderation.ts<br/>• openRouter.ts (AI)<br/>• penalties.ts<br/>• permissions.ts"]
+        AUTH_CMD["Auth Commands<br/>• /auth generate<br/>• /auth reset<br/>• /auth get<br/>• /auth customize"]
         CMD --> HAND --> SVC
+        AUTH_CMD --> HAND
     end
 
     subgraph AUTH["Auth Service Layer (src/lib/)"]
         JWT["jwt.ts<br/>JWT gen/verify"]
-        AK["apiKey.ts<br/>API key gen/hash/verify"]
+        AK["apiKey.ts<br/>API key gen/hash/verify<br/>(argon2id)"]
         TS["tokenService.ts<br/>CRUD, rate limits,<br/>IP whitelist, audit"]
         PRISMA["prisma.ts<br/>Prisma v7 + Neon adapter"]
         JWT --> PRISMA
@@ -50,14 +82,18 @@ graph TB
     subgraph EXT["External Services"]
         OR["OpenRouter API<br/>(AI moderation)"]
         AUTHAPI["Auth Validation API<br/>(Express, port 4000)"]
+        WEB["Web Applications<br/>(JS/TS, React, etc.)"]
+        NATIVE["Native Applications<br/>(C#, Python, etc.)"]
     end
 
     SVC -- "AI check" --> OR
     SVC -- "local check" --> JSON[(JSON files)]
-    Discord <--> AUTH
+    DISCORD <--> AUTH
     PRISMA --> DB
     AUTHAPI -- "validates tokens" --> AUTH
     AUTHAPI -- "rate limit check" --> DB
+    WEB -- "Bearer JWT" --> AUTHAPI
+    NATIVE -- "Bearer API Key" --> AUTHAPI
 ```
 
 ---
@@ -72,7 +108,7 @@ graph TB
 | **Database ORM**   | [Prisma](https://prisma.io) v7           |
 | **Database**       | [Neon PostgreSQL](https://neon.tech)     |
 | **Driver Adapter** | `@prisma/adapter-neon`                   |
-| **Auth**           | JWT (jsonwebtoken), API Keys (argon2id)  |
+| **Auth Tokens**    | JWT (jsonwebtoken), API Keys (argon2id)  |
 | **AI Moderation**  | [OpenRouter](https://openrouter.ai)      |
 | **Auth Server**    | Express (standalone validation endpoint) |
 | **Config**         | `prisma.config.ts` + `dotenv`            |
@@ -90,7 +126,7 @@ regix-badword-blocker/
 │   └── prisma/                # Prisma v7 generated client (gitignored)
 ├── src/
 │   ├── index.ts               # Bot entry point
-│   ├── auth-server.ts         # Express auth validation server
+│   ├── auth-server.ts         # Express auth validation server (port 4000)
 │   ├── types.ts               # TypeScript interfaces
 │   ├── commands/              # Discord slash/prefix commands
 │   │   ├── auth.ts            # /auth generate, reset, get, customize
@@ -102,7 +138,7 @@ regix-badword-blocker/
 │   ├── handlers/
 │   │   └── commandHandler.ts  # Hybrid command router
 │   ├── lib/                   # Auth service layer
-│   │   ├── prisma.ts          # Prisma client singleton
+│   │   ├── prisma.ts          # Prisma client singleton (Neon adapter)
 │   │   ├── jwt.ts             # JWT generation & verification
 │   │   ├── apiKey.ts          # API key generation, hashing, validation
 │   │   └── tokenService.ts    # Token management (CRUD, rate limits, audit)
@@ -112,7 +148,7 @@ regix-badword-blocker/
 │       ├── penalties.ts       # Strike/ban enforcement
 │       ├── permissions.ts     # Authorization checks
 │       └── storage.ts         # JSON file storage (legacy)
-├── data/                      # JSON data files (legacy phase-out)
+├── data/                      # JSON data files (legacy, moderation data)
 │   ├── config.json
 │   ├── words.json
 │   ├── violations.json
@@ -128,23 +164,30 @@ regix-badword-blocker/
 
 ## 🔑 Commands
 
-| Command                 | Type           | Access | Description                       |
-| ----------------------- | -------------- | ------ | --------------------------------- |
-| `/help`                 | Slash + Prefix | All    | Show available commands           |
-| `/strikes [user]`       | Slash + Prefix | Mod+   | Check strike count for a user     |
-| `/reset [user]`         | Slash + Prefix | Admin+ | Reset strikes for a user          |
-| `/manage ignore`        | Slash + Prefix | Admin+ | Add/remove/list ignored channels  |
-| `/manage whitelist`     | Slash + Prefix | Admin+ | Add/remove/list whitelisted words |
-| `/manage blacklist`     | Slash + Prefix | Admin+ | Add/remove/list bad words         |
-| `/settings view`        | Slash + Prefix | Owner  | View current bot configuration    |
-| `/settings timeout`     | Slash + Prefix | Owner  | Set timeout duration              |
-| `/settings max-strikes` | Slash + Prefix | Owner  | Set max strikes before auto-ban   |
-| `/settings dm-warning`  | Slash + Prefix | Owner  | Customize DM warning embed        |
-| `/auth generate`        | Slash + Prefix | Admin+ | Generate new API key              |
-| `/auth reset`           | Slash + Prefix | Admin+ | Revoke an API key                 |
-| `/auth get`             | Slash + Prefix | Admin+ | List API keys / view key details  |
-| `/auth customize jwt`   | Slash + Prefix | Admin+ | Configure JWT settings            |
-| `/auth customize view`  | Slash + Prefix | Admin+ | View current JWT configuration    |
+| Command                             | Type           | Access | Description                               |
+| ----------------------------------- | -------------- | ------ | ----------------------------------------- |
+| `/help`                             | Slash + Prefix | All    | Show detailed help menu with all commands |
+| `/strikes [user]`                   | Slash + Prefix | Mod+   | Check strike count for a user             |
+| `/reset [user]`                     | Slash + Prefix | Admin+ | Reset strikes for a user                  |
+| `/manage ignore add/remove/list`    | Slash + Prefix | Admin+ | Manage channels that bypass moderation    |
+| `/manage whitelist add/remove/list` | Slash + Prefix | Admin+ | Manage whitelisted words                  |
+| `/manage blacklist add/remove/list` | Slash + Prefix | Admin+ | Manage bad words (blacklist)              |
+| `/settings view`                    | Slash + Prefix | Owner  | View all current bot settings             |
+| `/settings timeout`                 | Slash + Prefix | Owner  | Set timeout duration for flagged users    |
+| `/settings max-strikes`             | Slash + Prefix | Owner  | Set max strikes before auto-ban           |
+| `/settings notification`            | Slash + Prefix | Owner  | Set notification channel                  |
+| `/settings log-channel`             | Slash + Prefix | Owner  | Set log channel                           |
+| `/settings dm-warning`              | Slash + Prefix | Owner  | Customize DM warning embed                |
+| `/settings log-embed`               | Slash + Prefix | Owner  | Customize log embed                       |
+| `/settings terms`                   | Slash + Prefix | Owner  | Customize Terms & Conditions embed        |
+| `/settings strike-embed`            | Slash + Prefix | Owner  | Customize strike check embed              |
+| `/settings reset-embed`             | Slash + Prefix | Owner  | Customize strikes reset embed             |
+| `/auth generate`                    | Slash + Prefix | Admin+ | Generate API Key + JWT (ephemeral)        |
+| `/auth reset`                       | Slash + Prefix | Admin+ | Revoke all keys, issue fresh set          |
+| `/auth get`                         | Slash + Prefix | Admin+ | View active keys, JWT config, rate limits |
+| `/auth customize`                   | Slash + Prefix | Admin+ | Set rate limits, IP whitelist             |
+
+> **⚠️ Security:** All command responses containing tokens or keys are strictly **ephemeral** — only the user who ran the command can see the sensitive data.
 
 ---
 
@@ -154,58 +197,87 @@ regix-badword-blocker/
 
 Stores hashed API keys for external service authentication.
 
-- `keyPrefix` — First 8 chars of the key for identification
-- `keyHash` — Argon2id hash of the full API key
-- Rate limiting: `rateLimit` (reqs/window), `rateLimitWindow` (ms)
-- Security: `ipWhitelist` (comma-separated), `permissions` (read/write/admin)
-- Status: `isActive`, `lastUsedAt`, `expiresAt`
+| Field             | Type      | Description                           |
+| ----------------- | --------- | ------------------------------------- |
+| `keyPrefix`       | String    | First 8 chars of the key for lookup   |
+| `keyHash`         | String    | Argon2id hash of the full API key     |
+| `name`            | String    | Human-readable name                   |
+| `ownerId`         | String    | Discord user ID of the key owner      |
+| `guildId`         | String?   | Discord guild ID (optional)           |
+| `rateLimit`       | Int       | Max requests per window (default: 60) |
+| `rateLimitWindow` | Int       | Window in ms (default: 60000 = 1 min) |
+| `ipWhitelist`     | String    | Comma-separated IPs or CIDR ranges    |
+| `permissions`     | String    | `read`, `write`, or `admin`           |
+| `isActive`        | Boolean   | Whether the key is active             |
+| `lastUsedAt`      | DateTime? | Last validation timestamp             |
+| `expiresAt`       | DateTime? | Key expiration (null = long-lived)    |
 
 ### JwtConfig
 
 Guild-specific JWT signing configuration.
 
-- `guildId` (unique), `secret`, `expiresIn`, `issuer`, `audience`
-- Rate limiting for validation endpoint
+| Field             | Type    | Description                          |
+| ----------------- | ------- | ------------------------------------ |
+| `guildId`         | String  | Unique per Discord guild             |
+| `secret`          | String  | JWT signing secret                   |
+| `expiresIn`       | String  | Token expiration (e.g., `24h`, `7d`) |
+| `issuer`          | String  | JWT issuer claim                     |
+| `audience`        | String? | Optional audience claim              |
+| `rateLimit`       | Int     | Max validations per window           |
+| `rateLimitWindow` | Int     | Window in ms                         |
 
 ### RateLimitLog
 
 Tracks rate limit hits for monitoring.
 
-- `keyId` (FK to ApiKey), `ip`, `endpoint`, `timestamp`
+| Field       | Type     | Description            |
+| ----------- | -------- | ---------------------- |
+| `keyId`     | String?  | FK to ApiKey           |
+| `ip`        | String   | Client IP              |
+| `endpoint`  | String   | Endpoint that was hit  |
+| `timestamp` | DateTime | When the limit was hit |
 
 ### AuditLog
 
 Security audit trail for all auth actions.
 
-- `action`, `actorId`, `targetId`, `details` (JSON), `ip`, `timestamp`
+| Field       | Type     | Description                 |
+| ----------- | -------- | --------------------------- |
+| `action`    | String   | e.g., `auth.generate`       |
+| `actorId`   | String   | Discord user ID             |
+| `targetId`  | String?  | Target resource ID          |
+| `details`   | String?  | JSON string with extra info |
+| `ip`        | String?  | Client IP                   |
+| `timestamp` | DateTime | When the action occurred    |
 
 ---
 
-## 🔐 Auth System
+## 🔐 Auth System — Two Token Types
 
-The auth system provides **two authentication methods** for external services:
+REGIX provides **two authentication methods** for external services:
 
-### API Keys
+### 1. Secret API Key (Long-Lived)
 
-- Generated via `/auth generate` command in Discord
-- Prefixed with `rgx_` for easy identification
-- Hashed with **argon2id** before storage
-- Full key shown **only once** on creation
-- Configurable: rate limits, IP whitelist, permissions, expiry
-- Validated via the Express Auth Validation Server
+- **Purpose:** Persistent/native applications (C# WinForms, Console apps, Python scripts)
+- **Format:** `rgx_<64-char-hex>` (e.g., `rgx_abcdef1234567890...`)
+- **Storage:** Hashed with **argon2id** before database storage
+- **Shown:** Only once on creation (ephemeral Discord response)
+- **Validation:** Looked up by prefix, hash verified, rate limit + IP whitelist checked
+- **Lifetime:** Configurable expiry or permanent (long-lived)
 
-### JWT Tokens
+### 2. JWT Token (Short-Lived)
 
-- Guild-specific signing configuration (stored in database)
-- Configured via `/auth customize jwt` command
-- Standard JWT claims: `sub`, `guildId`, `permissions`, `iat`, `exp`, `iss`, `aud`
-- Validated against the guild's stored secret
+- **Purpose:** Web-based client-server architecture (SPAs, APIs, server-to-server)
+- **Format:** Standard JWT with `sub`, `guildId`, `permissions`, `iat`, `exp`, `iss`, `aud`
+- **Storage:** Guild-specific signing secret in database
+- **Validation:** Signature verified against guild's stored secret
+- **Lifetime:** Configurable (default: 24h)
 
 ---
 
 ## 🌐 Auth Validation API
 
-The **standalone Express server** validates Bearer tokens for external services.
+The **standalone Express server** (port 4000) validates Bearer tokens for all external services.
 
 ### Endpoints
 
@@ -216,176 +288,328 @@ The **standalone Express server** validates Bearer tokens for external services.
 | `/validate`     | POST   | Bearer token        | Validate JWT or API key    |
 | `/keys/:prefix` | GET    | Admin-level API key | Get API key info by prefix |
 
+### How to Pass Tokens
+
+All external services must pass tokens in the HTTP `Authorization` header using the **Bearer** scheme:
+
+```http
+Authorization: Bearer <your_token_here>
+```
+
+#### For JWT validation (web apps):
+
+```http
+POST /validate HTTP/1.1
+Host: localhost:4000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+Content-Type: application/json
+
+{
+  "guildId": "123456789012345678",
+  "endpoint": "/api/webhook"
+}
+```
+
+#### For API Key validation (native apps):
+
+```http
+POST /validate HTTP/1.1
+Host: localhost:4000
+Authorization: Bearer rgx_abcdef1234567890abcdef1234567890
+Content-Type: application/json
+
+{
+  "endpoint": "/api/messages"
+}
+```
+
 ### Rate Limiting
 
-- **Per IP**: 100 requests/minute (in-memory)
-- **Per API Key**: Configurable per key (database-backed, default 60 req/min)
+- **Per IP:** 100 requests/minute (in-memory)
+- **Per API Key:** Configurable per key (database-backed, default 60 req/min)
+- **Per JWT Config:** Configurable per guild (database-backed, default 100 req/min)
 
 ---
 
 ## 🔌 Integration Examples
 
-### JavaScript / TypeScript (Node.js)
+### JavaScript / TypeScript (Web Application)
 
-```javascript
-// Using an API Key
-const response = await fetch("http://localhost:4000/validate", {
-  method: "POST",
-  headers: {
-    Authorization: "Bearer rgx_abcdef1234567890abcdef1234567890",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    endpoint: "/api/messages",
-  }),
-});
-
-const data = await response.json();
-console.log(data);
-// {
-//   valid: true,
-//   type: "api_key",
-//   payload: {
-//     keyId: "uuid",
-//     name: "My Key",
-//     ownerId: "discord_user_id",
-//     guildId: "discord_guild_id",
-//     permissions: "read"
-//   },
-//   rateLimit: {
-//     remaining: 59,
-//     limit: 60,
-//     windowMs: 60000
-//   }
-// }
-```
-
-```javascript
-// Using a JWT
-const response = await fetch("http://localhost:4000/validate", {
-  method: "POST",
-  headers: {
-    Authorization: "Bearer eyJhbGciOiJIUzI1NiIs...",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    guildId: "123456789012345678",
-    endpoint: "/api/webhook",
-  }),
-});
-
-const data = await response.json();
-console.log(data);
-// {
-//   valid: true,
-//   type: "jwt",
-//   payload: {
-//     userId: "discord_user_id",
-//     guildId: "discord_guild_id",
-//     permissions: "read",
-//     issuedAt: "2024-01-01T00:00:00.000Z",
-//     expiresAt: "2024-01-02T00:00:00.000Z"
-//   }
-// }
-```
-
-### Python
-
-```python
-import requests
-
-# Validate an API key
-response = requests.post(
-    'http://localhost:4000/validate',
-    headers={
-        'Authorization': 'Bearer rgx_abcdef1234567890abcdef1234567890',
-        'Content-Type': 'application/json'
+```typescript
+// Using a JWT (short-lived, for web sessions)
+async function validateJwt(jwt: string, guildId: string) {
+  const response = await fetch("http://localhost:4000/validate", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      "Content-Type": "application/json",
     },
-    json={'endpoint': '/api/bot/data'}
-)
+    body: JSON.stringify({ guildId, endpoint: "/api/web" }),
+  });
 
-data = response.json()
-if data.get('valid'):
-    print(f"✅ Authenticated as: {data['payload']['name']}")
-    print(f"   Permissions: {data['payload']['permissions']}")
-    if 'rateLimit' in data:
-        print(f"   Rate limit remaining: {data['rateLimit']['remaining']}")
-else:
-    print(f"❌ Authentication failed: {data.get('error')}")
-```
+  const data = await response.json();
+  if (data.valid) {
+    console.log(`✅ Authenticated as user: ${data.payload.userId}`);
+    console.log(`   Permissions: ${data.payload.permissions}`);
+    console.log(`   Expires: ${data.payload.expiresAt}`);
+    return data.payload;
+  } else {
+    throw new Error(`Auth failed: ${data.error}`);
+  }
+}
 
-```python
-# Validate a JWT
-response = requests.post(
-    'http://localhost:4000/validate',
-    headers={
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIs...',
-        'Content-Type': 'application/json'
+// Using an API Key (long-lived, for server-to-server)
+async function validateApiKey(apiKey: string) {
+  const response = await fetch("http://localhost:4000/validate", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
-    json={
-        'guildId': '123456789012345678',
-        'endpoint': '/api/webhook'
-    }
-)
+    body: JSON.stringify({ endpoint: "/api/data" }),
+  });
 
-data = response.json()
-if data.get('valid'):
-    print(f"✅ JWT valid for user: {data['payload']['userId']}")
-    print(f"   Expires: {data['payload']['expiresAt']}")
+  const data = await response.json();
+  if (data.valid) {
+    console.log(`✅ Authenticated as: ${data.payload.name}`);
+    console.log(`   Permissions: ${data.payload.permissions}`);
+    console.log(`   Rate limit remaining: ${data.rateLimit.remaining}`);
+    return data.payload;
+  } else {
+    throw new Error(`Auth failed: ${data.error}`);
+  }
+}
 ```
 
-### C#
+### C# (Windows Forms / Console Application)
 
 ```csharp
+using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-var client = new HttpClient();
-var payload = JsonSerializer.Serialize(new
+public class RegixAuthClient
 {
-    guildId = "123456789012345678",
-    endpoint = "/api/messages"
-});
+    private readonly HttpClient _httpClient;
+    private readonly string _authServerUrl;
 
-var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:4000/validate")
-{
-    Content = new StringContent(payload, Encoding.UTF8, "application/json")
-};
-request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
-    "Bearer", "rgx_abcdef1234567890abcdef1234567890"
-);
+    public RegixAuthClient(string authServerUrl = "http://localhost:4000")
+    {
+        _httpClient = new HttpClient();
+        _authServerUrl = authServerUrl;
+    }
 
-var response = await client.SendAsync(request);
-var json = await response.Content.ReadAsStringAsync();
-var data = JsonSerializer.Deserialize<JsonElement>(json);
+    /// <summary>
+    /// Validate an API Key (long-lived, for native apps)
+    /// </summary>
+    public async Task<AuthResult> ValidateApiKeyAsync(string apiKey)
+    {
+        var payload = JsonSerializer.Serialize(new
+        {
+            endpoint = "/api/native-app"
+        });
 
-if (data.GetProperty("valid").GetBoolean())
-{
-    var type = data.GetProperty("type").GetString();
-    var perms = data.GetProperty("payload").GetProperty("permissions").GetString();
-    Console.WriteLine($"✅ Authenticated via {type}, permissions: {perms}");
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_authServerUrl}/validate"
+        )
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+        var response = await _httpClient.SendAsync(request);
+        var json = await response.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+
+        if (data.GetProperty("valid").GetBoolean())
+        {
+            var type = data.GetProperty("type").GetString();
+            var perms = data.GetProperty("payload").GetProperty("permissions").GetString();
+            var remaining = data.GetProperty("rateLimit").GetProperty("remaining").GetInt32();
+
+            Console.WriteLine($"✅ Authenticated via {type}, permissions: {perms}");
+            Console.WriteLine($"   Rate limit remaining: {remaining}");
+
+            return new AuthResult
+            {
+                Valid = true,
+                Type = type,
+                Permissions = perms,
+                RateLimitRemaining = remaining
+            };
+        }
+
+        var error = data.GetProperty("error").GetString();
+        Console.WriteLine($"❌ Authentication failed: {error}");
+        return new AuthResult { Valid = false, Error = error };
+    }
+
+    /// <summary>
+    /// Validate a JWT (short-lived, for web sessions)
+    /// </summary>
+    public async Task<AuthResult> ValidateJwtAsync(string jwt, string guildId)
+    {
+        var payload = JsonSerializer.Serialize(new
+        {
+            guildId,
+            endpoint = "/api/native-app"
+        });
+
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_authServerUrl}/validate"
+        )
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        var response = await _httpClient.SendAsync(request);
+        var json = await response.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+
+        if (data.GetProperty("valid").GetBoolean())
+        {
+            var userId = data.GetProperty("payload").GetProperty("userId").GetString();
+            var perms = data.GetProperty("payload").GetProperty("permissions").GetString();
+            var expiresAt = data.GetProperty("payload").GetProperty("expiresAt").GetString();
+
+            Console.WriteLine($"✅ JWT valid for user: {userId}");
+            Console.WriteLine($"   Permissions: {perms}");
+            Console.WriteLine($"   Expires: {expiresAt}");
+
+            return new AuthResult
+            {
+                Valid = true,
+                Type = "jwt",
+                Permissions = perms,
+                UserId = userId
+            };
+        }
+
+        var error = data.GetProperty("error").GetString();
+        Console.WriteLine($"❌ Authentication failed: {error}");
+        return new AuthResult { Valid = false, Error = error };
+    }
 }
-else
+
+public class AuthResult
 {
-    var error = data.GetProperty("error").GetString();
-    Console.WriteLine($"❌ Authentication failed: {error}");
+    public bool Valid { get; set; }
+    public string? Type { get; set; }
+    public string? Permissions { get; set; }
+    public string? UserId { get; set; }
+    public int RateLimitRemaining { get; set; }
+    public string? Error { get; set; }
+}
+
+// Usage example
+class Program
+{
+    static async Task Main()
+    {
+        var client = new RegixAuthClient();
+
+        // Validate an API Key
+        var apiKeyResult = await client.ValidateApiKeyAsync(
+            "rgx_abcdef1234567890abcdef1234567890"
+        );
+
+        // Validate a JWT
+        var jwtResult = await client.ValidateJwtAsync(
+            "eyJhbGciOiJIUzI1NiIs...",
+            "123456789012345678"
+        );
+    }
 }
 ```
 
-### Discord Bot (Generating a Token)
+### Python (Scripts / Applications)
 
-```javascript
-// src/services/my-service.ts
-import { generateToken } from "./lib/jwt";
+```python
+import requests
+from typing import Optional, Dict, Any
 
-async function authenticateUser(guildId, userId) {
-  const result = await generateToken(guildId, userId, "read");
-  if (result.success) {
-    console.log(`Token: ${result.token}`);
-    // Send this token to your external service
-  }
-}
+
+class RegixAuthClient:
+    """Client for REGIX Auth Validation Server"""
+
+    def __init__(self, auth_server_url: str = "http://localhost:4000"):
+        self.auth_server_url = auth_server_url
+
+    def validate_api_key(self, api_key: str) -> Dict[str, Any]:
+        """
+        Validate a long-lived Secret API Key.
+        Use this for Python scripts, bots, and native applications.
+        """
+        response = requests.post(
+            f"{self.auth_server_url}/validate",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={"endpoint": "/api/python-app"},
+        )
+
+        data = response.json()
+
+        if data.get("valid"):
+            print(f"✅ Authenticated as: {data['payload']['name']}")
+            print(f"   Permissions: {data['payload']['permissions']}")
+            print(f"   Rate limit remaining: {data['rateLimit']['remaining']}")
+            return data["payload"]
+        else:
+            raise PermissionError(f"Auth failed: {data.get('error')}")
+
+    def validate_jwt(self, jwt: str, guild_id: str) -> Dict[str, Any]:
+        """
+        Validate a short-lived JWT.
+        Use this for web session validation.
+        """
+        response = requests.post(
+            f"{self.auth_server_url}/validate",
+            headers={
+                "Authorization": f"Bearer {jwt}",
+                "Content-Type": "application/json",
+            },
+            json={"guildId": guild_id, "endpoint": "/api/python-web"},
+        )
+
+        data = response.json()
+
+        if data.get("valid"):
+            print(f"✅ JWT valid for user: {data['payload']['userId']}")
+            print(f"   Permissions: {data['payload']['permissions']}")
+            print(f"   Expires: {data['payload']['expiresAt']}")
+            return data["payload"]
+        else:
+            raise PermissionError(f"Auth failed: {data.get('error')}")
+
+
+# Usage
+client = RegixAuthClient()
+
+# Validate an API Key
+try:
+    payload = client.validate_api_key("rgx_abcdef1234567890abcdef1234567890")
+    print(f"Welcome {payload['name']}!")
+except PermissionError as e:
+    print(f"Access denied: {e}")
+
+# Validate a JWT
+try:
+    payload = client.validate_jwt(
+        "eyJhbGciOiJIUzI1NiIs...",
+        "123456789012345678"
+    )
+    print(f"User {payload['userId']} authenticated!")
+except PermissionError as e:
+    print(f"Access denied: {e}")
 ```
 
 ---
@@ -444,15 +668,16 @@ bun run start
 
 ### Scripts
 
-| Script                | Description                  |
-| --------------------- | ---------------------------- |
-| `bun run start`       | Start the Discord bot        |
-| `bun run dev`         | Start bot in watch mode      |
-| `bun run auth-server` | Start auth validation server |
-| `bun run db:generate` | Generate Prisma client       |
-| `bun run db:push`     | Push schema to database      |
-| `bun run db:migrate`  | Run Prisma migrations        |
-| `bun run db:studio`   | Open Prisma Studio (GUI)     |
+| Script                    | Description                     |
+| ------------------------- | ------------------------------- |
+| `bun run start`           | Start the Discord bot           |
+| `bun run dev`             | Start bot in watch mode         |
+| `bun run auth-server`     | Start auth validation server    |
+| `bun run auth-server:dev` | Start auth server in watch mode |
+| `bun run db:generate`     | Generate Prisma client          |
+| `bun run db:push`         | Push schema to database         |
+| `bun run db:migrate`      | Run Prisma migrations           |
+| `bun run db:studio`       | Open Prisma Studio (GUI)        |
 
 ---
 
@@ -463,6 +688,19 @@ bun run start
 3. **AI check** (if enabled) → Sends message to OpenRouter for contextual analysis
 4. **Word discovery** → AI identifies new bad words and automatically adds them
 5. **Penalty enforcement** → Strike count incremented, timeout applied, auto-ban at max strikes
+
+---
+
+## 🔐 How Auth Works (End-to-End Flow)
+
+1. **Admin runs `/auth generate`** in Discord
+2. Bot generates a **Secret API Key** (argon2id hashed, stored in Neon) and a **JWT** (signed with guild-specific secret)
+3. Both tokens are displayed **once** in an ephemeral Discord message
+4. **External applications** use these tokens in `Authorization: Bearer <token>` headers
+5. The **Auth Validation Server** (Express, port 4000) validates tokens against the database
+6. For API Keys: prefix lookup → hash verification → rate limit check → IP whitelist check
+7. For JWTs: guild config lookup → signature verification → expiry check
+8. Successful validation returns the token payload with permissions, rate limits, and metadata
 
 ---
 
