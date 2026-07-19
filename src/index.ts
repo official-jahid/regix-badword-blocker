@@ -5,11 +5,13 @@ import {
   handleSlashCommand,
   registerCommands,
 } from "./handlers/commandHandler";
+import { initPrisma } from "./lib/prisma";
 import { runPipeline } from "./services/moderation";
 import { applyPenalty, getFlagReason } from "./services/penalties";
 import { buildTermsEmbed, isCommandAuthorized } from "./services/permissions";
 import type { BotConfig } from "./types";
 
+import authCommand from "./commands/auth";
 import helpCommand from "./commands/help";
 import manageCommand from "./commands/manage";
 import resetCommand from "./commands/reset";
@@ -50,6 +52,7 @@ const client = new Client({
 });
 
 registerCommands([
+  authCommand,
   helpCommand,
   strikesCommand,
   resetCommand,
@@ -59,6 +62,18 @@ registerCommands([
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`💀 REGIX GOD MODE v2.0 READY — ${readyClient.user.tag}`);
+
+  // Initialize Prisma database connection
+  try {
+    await initPrisma();
+    console.log("[Bot] Prisma connected — auth system ready");
+  } catch (err) {
+    console.error("[Bot] Failed to initialize Prisma:", err);
+    console.log(
+      "[Bot] Continuing without database — auth commands will be unavailable",
+    );
+  }
+
   await deploySlashCommands(config);
 });
 

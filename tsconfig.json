@@ -27,6 +27,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
+    /* Deprecations */
+    "ignoreDeprecations": "6.0",
+
     /* Paths */
     "baseUrl": ".",
     "paths": {

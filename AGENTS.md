@@ -52,7 +52,7 @@ REGIX is a Discord moderation bot that filters inappropriate language using a hy
 | Runtime        | Bun (v1.x)                               |
 | Language       | TypeScript (ESNext modules)              |
 | Discord SDK    | discord.js v14                           |
-| Database ORM   | Prisma v7 (prisma-client generator)      |
+| Database ORM   | Prisma v7 (prisma-client-js generator)   |
 | Database       | Neon PostgreSQL (serverless)             |
 | Driver Adapter | @prisma/adapter-neon                     |
 | Auth           | JWT (jsonwebtoken), API Keys (argon2id)  |
@@ -70,14 +70,16 @@ regix-badword-blocker/
 ├── generated/
 │   └── prisma/                # Prisma v7 generated client (gitignored)
 ├── src/
-│   ├── index.ts               # Bot entry point
+│   ├── index.ts               # Bot entry point (Prisma init on startup)
+│   ├── auth-server.ts         # Express auth validation server (port 4000)
 │   ├── types.ts               # TypeScript interfaces
 │   ├── commands/              # Discord slash/prefix commands
-│   │   ├── help.ts
-│   │   ├── manage.ts
-│   │   ├── reset.ts
-│   │   ├── settings.ts
-│   │   └── strikes.ts
+│   │   ├── auth.ts            # /auth generate, reset, get, customize
+│   │   ├── help.ts            # /help (detailed command descriptions)
+│   │   ├── manage.ts          # /manage ignore, whitelist, blacklist
+│   │   ├── reset.ts           # /reset strikes
+│   │   ├── settings.ts        # /settings view, timeout, etc.
+│   │   └── strikes.ts         # /strikes check
 │   ├── handlers/
 │   │   └── commandHandler.ts  # Hybrid command router
 │   ├── lib/                   # Auth service layer
@@ -100,6 +102,7 @@ regix-badword-blocker/
 ├── .env                       # Environment variables (gitignored)
 ├── .env.example               # Environment variable template
 ├── AGENTS.md                  # This file — project analysis
+├── README.md                  # Full documentation with integration examples
 ├── task-progress.md           # Task tracking
 └── package.json
 ```
@@ -136,7 +139,7 @@ regix-badword-blocker/
 
 2. **Decoupled Auth System**: Auth service layer (`src/lib/`) is independent of Discord. Can be used by external services via the Express validation server.
 
-3. **Prisma v7 with Neon Adapter**: Uses the modern `prisma-client` generator with `@prisma/adapter-neon` for serverless-compatible PostgreSQL connections.
+3. **Prisma v7 with Neon Adapter**: Uses `prisma-client-js` generator with `@prisma/adapter-neon` for serverless-compatible PostgreSQL connections. Connection URL configured in `prisma.config.ts`.
 
 4. **API Key Security**: Keys are prefixed with `rgx_`, hashed with argon2id, and only the full key is shown once on creation. IP whitelisting adds an extra layer.
 
@@ -163,21 +166,38 @@ regix-badword-blocker/
 
 ## Commands
 
-| Command    | Type           | Access | Description                     |
-| ---------- | -------------- | ------ | ------------------------------- |
-| `help`     | Slash + Prefix | All    | Show available commands         |
-| `strikes`  | Slash + Prefix | Mod+   | Check strike count for a user   |
-| `reset`    | Slash + Prefix | Admin+ | Reset strikes for a user        |
-| `manage`   | Slash + Prefix | Admin+ | Add/remove bad words & channels |
-| `settings` | Slash + Prefix | Owner  | View/update bot configuration   |
+| Command                             | Type           | Access | Description                               |
+| ----------------------------------- | -------------- | ------ | ----------------------------------------- |
+| `/help`                             | Slash + Prefix | All    | Show detailed help menu with all commands |
+| `/strikes [user]`                   | Slash + Prefix | Mod+   | Check strike count for a user             |
+| `/reset [user]`                     | Slash + Prefix | Admin+ | Reset strikes for a user                  |
+| `/manage ignore add/remove/list`    | Slash + Prefix | Admin+ | Manage channels that bypass moderation    |
+| `/manage whitelist add/remove/list` | Slash + Prefix | Admin+ | Manage whitelisted words                  |
+| `/manage blacklist add/remove/list` | Slash + Prefix | Admin+ | Manage bad words (blacklist)              |
+| `/settings view`                    | Slash + Prefix | Owner  | View all current bot settings             |
+| `/settings timeout`                 | Slash + Prefix | Owner  | Set timeout duration for flagged users    |
+| `/settings max-strikes`             | Slash + Prefix | Owner  | Set max strikes before auto-ban           |
+| `/settings notification`            | Slash + Prefix | Owner  | Set notification channel                  |
+| `/settings log-channel`             | Slash + Prefix | Owner  | Set log channel                           |
+| `/settings dm-warning`              | Slash + Prefix | Owner  | Customize DM warning embed                |
+| `/settings log-embed`               | Slash + Prefix | Owner  | Customize log embed                       |
+| `/settings terms`                   | Slash + Prefix | Owner  | Customize Terms & Conditions embed        |
+| `/settings strike-embed`            | Slash + Prefix | Owner  | Customize strike check embed              |
+| `/settings reset-embed`             | Slash + Prefix | Owner  | Customize strikes reset embed             |
+| `/auth generate`                    | Slash + Prefix | Admin+ | Generate new API key (shown once)         |
+| `/auth reset`                       | Slash + Prefix | Admin+ | Revoke an API key by ID                   |
+| `/auth get`                         | Slash + Prefix | Admin+ | List API keys / view key details          |
+| `/auth customize jwt`               | Slash + Prefix | Admin+ | Configure JWT settings                    |
+| `/auth customize view`              | Slash + Prefix | Admin+ | View current JWT configuration            |
 
-## Planned Features (from task-progress.md)
+## Auth Validation API (Express, port 4000)
 
-- Phase 5: Auth slash commands (`/auth generate`, `/auth reset`, `/auth get`, `/auth customize`)
-- Phase 6: Central Express auth validation server with Bearer token validation and rate limiting
-- Phase 7: Update bot entry point to register auth commands and initialize Prisma
-- Phase 8: Comprehensive README with architecture diagram and integration code snippets
-- Phase 9: Final verification
+| Endpoint        | Method | Auth Required       | Description                |
+| --------------- | ------ | ------------------- | -------------------------- |
+| `/health`       | GET    | No                  | Health check               |
+| `/`             | GET    | No                  | API documentation          |
+| `/validate`     | POST   | Bearer token        | Validate JWT or API key    |
+| `/keys/:prefix` | GET    | Admin-level API key | Get API key info by prefix |
 
 ## Development
 
