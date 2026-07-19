@@ -1,0 +1,32 @@
+# Decoupled REGIX Auth System — Task Progress
+
+- [x] Phase 1: Codebase analysis complete
+- [x] Phase 2: Clean up & decouple
+  - [x] Update package.json (remove web deps, add Prisma/Neon deps)
+  - [x] Delete web dashboard files (api/, public/, vercel.json, .vercelignore, web data files)
+  - [x] Rewrite tsconfig.json for standalone bot
+  - [x] Update .env.example with new auth variables
+- [x] Phase 3: Prisma/Neon PostgreSQL database setup
+  - [x] Create Prisma schema (ApiKey, JwtConfig, RateLimitLog, AuditLog models)
+  - [x] Create Prisma client utility
+- [x] Phase 4: Auth service layer
+  - [x] Create JWT utility (generate, verify)
+  - [x] Create API Key utility (generate, verify, hash)
+  - [x] Create token management service (CRUD, rate limits, IP whitelist)
+- [ ] Phase 5: Auth slash commands
+  - [ ] Create `/auth generate` command
+  - [ ] Create `/auth reset` command
+  - [ ] Create `/auth get` command
+  - [ ] Create `/auth customize` command
+- [ ] Phase 6: Central Auth Validation API
+  - [ ] Create standalone Express auth validation server
+  - [ ] Implement Bearer token validation endpoint
+  - [ ] Implement rate limiting per API key
+- [ ] Phase 7: Update bot entry point
+  - [ ] Register auth commands
+  - [ ] Initialize Prisma on startup
+- [ ] Phase 8: Comprehensive README.md
+  - [ ] Mermaid.js architecture diagram
+  - [ ] Integration code snippets (JS/TS, C#, Python)
+  - [ ] Full documentation
+- [ ] Phase 9: Final verification

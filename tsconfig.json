@@ -9,8 +9,6 @@
     "moduleDetection": "force",
 
     /* Output & Interop */
-    "outDir": "./dist",
-    "rootDir": "./src",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,7 +25,13 @@
 
     /* Decorators */
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+
+    /* Paths */
+    "baseUrl": ".",
+    "paths": {
+      "@generated/*": ["generated/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

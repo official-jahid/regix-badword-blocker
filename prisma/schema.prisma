@@ -1,0 +1,105 @@
+// ─── REGIX Auth System — Prisma Schema ─────────────────────────────────────
+// Uses Neon PostgreSQL for serverless-compatible database
+// Connection URL is configured in prisma.config.ts
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// ─── API Keys ──────────────────────────────────────────────────────────────
+// Stores generated API keys for external service authentication
+model ApiKey {
+    id          String  @id @default(uuid())
+    keyPrefix   String // First 8 chars of the key for identification
+    keyHash     String  @unique // Argon2 hash of the full API key
+    name        String // Human-readable name for this key
+    description String? // Optional description
+    ownerId     String // Discord user ID of the key owner
+    guildId     String? // Discord guild ID (optional, for guild-scoped keys)
+
+    // Rate limiting
+    rateLimit       Int @default(60) // Max requests per window
+    rateLimitWindow Int @default(60000) // Window in ms (default: 1 min)
+
+    // IP whitelist (comma-separated IPs or CIDR ranges)
+    ipWhitelist String @default("")
+
+    // Permissions
+    permissions String @default("read") // "read", "write", "admin"
+
+    // Status
+    isActive   Boolean   @default(true)
+    lastUsedAt DateTime?
+    expiresAt  DateTime?
+
+    // Metadata
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    rateLimitLogs RateLimitLog[]
+
+    @@index([keyPrefix])
+    @@index([ownerId])
+    @@index([guildId])
+    @@map("api_keys")
+}
+
+// ─── JWT Configuration ─────────────────────────────────────────────────────
+// Stores JWT signing secrets and configuration per guild
+model JwtConfig {
+    id        String  @id @default(uuid())
+    guildId   String  @unique // One config per Discord guild
+    secret    String // JWT signing secret
+    expiresIn String  @default("24h") // Token expiration (e.g., "24h", "7d")
+    issuer    String  @default("regix-auth")
+    audience  String? // Optional audience claim
+
+    // Rate limiting for validation endpoint
+    rateLimit       Int @default(100) // Max validations per window
+    rateLimitWindow Int @default(60000) // Window in ms
+
+    // Status
+    isActive Boolean @default(true)
+
+    // Metadata
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("jwt_configs")
+}
+
+// ─── Rate Limit Log ────────────────────────────────────────────────────────
+// Tracks rate limit hits for monitoring
+model RateLimitLog {
+    id        String   @id @default(uuid())
+    keyId     String? // FK to ApiKey (nullable for JWT rate limits)
+    apiKey    ApiKey?  @relation(fields: [keyId], references: [id])
+    ip        String // Client IP
+    endpoint  String // Endpoint that was hit
+    timestamp DateTime @default(now())
+
+    @@index([keyId])
+    @@index([ip])
+    @@index([timestamp])
+    @@map("rate_limit_logs")
+}
+
+// ─── Audit Log ─────────────────────────────────────────────────────────────
+// Tracks all auth-related actions for security auditing
+model AuditLog {
+    id        String   @id @default(uuid())
+    action    String // e.g., "api_key.created", "api_key.revoked", "jwt.validated"
+    actorId   String // Discord user ID who performed the action
+    targetId  String? // Target resource ID (e.g., API key ID)
+    details   String? // JSON string with additional details
+    ip        String? // Client IP
+    timestamp DateTime @default(now())
+
+    @@index([actorId])
+    @@index([action])
+    @@index([timestamp])
+    @@map("audit_logs")
+}
